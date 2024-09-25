@@ -1,0 +1,313 @@
+--- Execution profile ---
+Total samples       : 1379
+unknown_Java        : 3 (0.22%)
+not_walkable_Java   : 2 (0.15%)
+
+--- 2850052200 ns (20.54%), 285 samples
+  [ 0] md5_implCompress
+  [ 1] sun.security.provider.MD5.implCompress
+  [ 2] sun.security.provider.MD5.implDigest
+  [ 3] sun.security.provider.DigestBase.engineDigest
+  [ 4] sun.security.provider.DigestBase.engineDigest
+  [ 5] java.security.MessageDigest$Delegate.engineDigest
+  [ 6] java.security.MessageDigest.digest
+  [ 7] com.juoska.benchmark.CryptoBench.crypt
+  [ 8] com.juoska.benchmark.CryptoBench.execute
+  [ 9] com.juoska.benchmark.CryptoBench.main
+
+--- 2050032800 ns (14.78%), 204 samples
+  [ 0] jbyte_disjoint_arraycopy
+  [ 1] com.juoska.benchmark.CryptoBench.crypt
+  [ 2] com.juoska.benchmark.CryptoBench.execute
+  [ 3] com.juoska.benchmark.CryptoBench.main
+
+--- 860002900 ns (6.20%), 86 samples
+  [ 0] java.lang.Integer.toUnsignedString0
+  [ 1] java.lang.Integer.toHexString
+  [ 2] com.juoska.benchmark.CryptoBench.crypt
+  [ 3] com.juoska.benchmark.CryptoBench.execute
+  [ 4] com.juoska.benchmark.CryptoBench.main
+
+--- 800128500 ns (5.77%), 80 samples
+  [ 0] com.juoska.benchmark.RandomStringUtils.generate
+  [ 1] com.juoska.benchmark.CryptoBench.execute
+  [ 2] com.juoska.benchmark.CryptoBench.main
+
+--- 800040200 ns (5.77%), 76 samples
+  [ 0] [vdso]
+  [ 1] clock_gettime
+  [ 2] java.util.Random.<init>
+  [ 3] java.util.Random.<init>
+  [ 4] com.juoska.benchmark.RandomStringUtils.generate
+  [ 5] com.juoska.benchmark.CryptoBench.execute
+  [ 6] com.juoska.benchmark.CryptoBench.main
+
+--- 370020000 ns (2.67%), 37 samples
+  [ 0] sun.security.jca.GetInstance.getInstance
+  [ 1] java.security.MessageDigest.getInstance
+  [ 2] com.juoska.benchmark.CryptoBench.crypt
+  [ 3] com.juoska.benchmark.CryptoBench.execute
+  [ 4] com.juoska.benchmark.CryptoBench.main
+
+--- 320025200 ns (2.31%), 32 samples
+  [ 0] java.lang.Integer.toUnsignedString0
+  [ 1] java.lang.Integer.toHexString
+  [ 2] com.juoska.benchmark.CryptoBench.crypt
+  [ 3] com.juoska.benchmark.CryptoBench.execute
+  [ 4] com.juoska.benchmark.CryptoBench.main
+
+--- 220067100 ns (1.59%), 22 samples
+  [ 0] java.lang.Integer.formatUnsignedInt
+  [ 1] java.lang.Integer.toUnsignedString0
+  [ 2] java.lang.Integer.toHexString
+  [ 3] com.juoska.benchmark.CryptoBench.crypt
+  [ 4] com.juoska.benchmark.CryptoBench.execute
+  [ 5] com.juoska.benchmark.CryptoBench.main
+
+--- 220003400 ns (1.59%), 22 samples
+  [ 0] com.juoska.benchmark.CryptoBench.crypt
+  [ 1] com.juoska.benchmark.CryptoBench.execute
+  [ 2] com.juoska.benchmark.CryptoBench.main
+
+--- 210014200 ns (1.51%), 21 samples
+  [ 0] java.lang.Integer.toUnsignedString0
+  [ 1] java.lang.Integer.toHexString
+  [ 2] com.juoska.benchmark.CryptoBench.crypt
+  [ 3] com.juoska.benchmark.CryptoBench.execute
+  [ 4] com.juoska.benchmark.CryptoBench.main
+
+--- 190078000 ns (1.37%), 19 samples
+  [ 0] jlong_disjoint_arraycopy
+  [ 1] java.util.Arrays.copyOfRange
+  [ 2] java.lang.StringLatin1.newString
+  [ 3] java.lang.StringBuilder.toString
+  [ 4] com.juoska.benchmark.RandomStringUtils.generate
+  [ 5] com.juoska.benchmark.CryptoBench.execute
+  [ 6] com.juoska.benchmark.CryptoBench.main
+
+--- 20003500 ns (0.14%), 2 samples
+  [ 0] jdk.internal.util.ArraysSupport.newLength
+  [ 1] java.lang.AbstractStringBuilder.newCapacity
+  [ 2] java.lang.AbstractStringBuilder.ensureCapacityInternal
+  [ 3] java.lang.AbstractStringBuilder.append
+  [ 4] java.lang.StringBuilder.append
+  [ 5] com.juoska.benchmark.CryptoBench.crypt
+  [ 6] com.juoska.benchmark.CryptoBench.execute
+  [ 7] com.juoska.benchmark.CryptoBench.main
+
+--- 20002100 ns (0.14%), 2 samples
+  [ 0] sun.security.provider.DigestBase.engineUpdate
+  [ 1] sun.security.provider.MD5.implDigest
+  [ 2] sun.security.provider.DigestBase.engineDigest
+  [ 3] sun.security.provider.DigestBase.engineDigest
+  [ 4] java.security.MessageDigest$Delegate.engineDigest
+  [ 5] java.security.MessageDigest.digest
+  [ 6] com.juoska.benchmark.CryptoBench.crypt
+  [ 7] com.juoska.benchmark.CryptoBench.execute
+  [ 8] com.juoska.benchmark.CryptoBench.main
+
+--- 20001800 ns (0.14%), 2 samples
+  [ 0] sun.security.provider.MD5.<init>
+  [ 1] jdk.internal.reflect.GeneratedConstructorAccessor1.newInstance
+  [ 2] jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance
+  [ 3] java.lang.reflect.Constructor.newInstanceWithCaller
+  [ 4] java.lang.reflect.Constructor.newInstance
+  [ 5] java.security.Provider$Service.newInstanceOf
+  [ 6] java.security.Provider$Service.newInstanceUtil
+  [ 7] java.security.Provider$Service.newInstance
+  [ 8] sun.security.jca.GetInstance.getInstance
+  [ 9] sun.security.jca.GetInstance.getInstance
+  [10] java.security.MessageDigest.getInstance
+  [11] com.juoska.benchmark.CryptoBench.crypt
+  [12] com.juoska.benchmark.CryptoBench.execute
+  [13] com.juoska.benchmark.CryptoBench.main
+
+--- 20001700 ns (0.14%), 2 samples
+  [ 0] com.juoska.benchmark.RandomStringUtils.generate
+  [ 1] com.juoska.benchmark.CryptoBench.execute
+  [ 2] com.juoska.benchmark.CryptoBench.main
+
+--- 20001600 ns (0.14%), 2 samples
+  [ 0] java.security.Provider.getService
+  [ 1] sun.security.jca.ProviderList.getService
+  [ 2] sun.security.jca.GetInstance.getInstance
+  [ 3] java.security.MessageDigest.getInstance
+  [ 4] com.juoska.benchmark.CryptoBench.crypt
+  [ 5] com.juoska.benchmark.CryptoBench.execute
+  [ 6] com.juoska.benchmark.CryptoBench.main
+
+--- 20001500 ns (0.14%), 2 samples
+  [ 0] java.lang.ref.Reference.refersToImpl
+  [ 1] java.lang.ref.Reference.refersTo
+  [ 2] java.lang.reflect.AccessibleObject.isAccessChecked
+  [ 3] java.lang.reflect.AccessibleObject.verifyAccess
+  [ 4] java.lang.reflect.AccessibleObject.checkAccess
+  [ 5] java.lang.reflect.Constructor.newInstanceWithCaller
+  [ 6] java.lang.reflect.Constructor.newInstance
+  [ 7] java.security.Provider$Service.newInstanceOf
+  [ 8] java.security.Provider$Service.newInstanceUtil
+  [ 9] java.security.Provider$Service.newInstance
+  [10] sun.security.jca.GetInstance.getInstance
+  [11] sun.security.jca.GetInstance.getInstance
+  [12] java.security.MessageDigest.getInstance
+  [13] com.juoska.benchmark.CryptoBench.crypt
+  [14] com.juoska.benchmark.CryptoBench.execute
+  [15] com.juoska.benchmark.CryptoBench.main
+
+--- 20001500 ns (0.14%), 2 samples
+  [ 0] java.lang.Integer.formatUnsignedInt
+  [ 1] java.lang.Integer.toUnsignedString0
+  [ 2] java.lang.Integer.toHexString
+  [ 3] com.juoska.benchmark.CryptoBench.crypt
+  [ 4] com.juoska.benchmark.CryptoBench.execute
+  [ 5] com.juoska.benchmark.CryptoBench.main
+
+--- 20001000 ns (0.14%), 2 samples
+  [ 0] com.juoska.benchmark.CryptoBench.execute
+  [ 1] com.juoska.benchmark.CryptoBench.main
+
+--- 20001000 ns (0.14%), 2 samples
+  [ 0] java.security.Provider$ServiceKey.hashCode
+  [ 1] java.util.concurrent.ConcurrentHashMap.get
+  [ 2] java.security.Provider.getService
+  [ 3] sun.security.jca.ProviderList.getService
+  [ 4] sun.security.jca.GetInstance.getInstance
+  [ 5] java.security.MessageDigest.getInstance
+  [ 6] com.juoska.benchmark.CryptoBench.crypt
+  [ 7] com.juoska.benchmark.CryptoBench.execute
+  [ 8] com.juoska.benchmark.CryptoBench.main
+
+--- 20000900 ns (0.14%), 2 samples
+  [ 0] jbyte_arraycopy
+  [ 1] java.lang.String.getBytes
+  [ 2] java.lang.StringConcatHelper.prepend
+  [ 3] java.lang.StringConcatHelper.simpleConcat
+  [ 4] java.lang.invoke.DirectMethodHandle$Holder.invokeStatic
+  [ 5] java.lang.invoke.LambdaForm$MH.0x00007f60c0001000.invoke
+  [ 6] java.lang.invoke.Invokers$Holder.linkToTargetMethod
+  [ 7] com.juoska.benchmark.CryptoBench.crypt
+  [ 8] com.juoska.benchmark.CryptoBench.execute
+  [ 9] com.juoska.benchmark.CryptoBench.main
+
+--- 20000700 ns (0.14%), 2 samples
+  [ 0] sun.security.provider.DigestBase.<init>
+  [ 1] sun.security.provider.MD5.<init>
+  [ 2] jdk.internal.reflect.GeneratedConstructorAccessor1.newInstance
+  [ 3] jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance
+  [ 4] java.lang.reflect.Constructor.newInstanceWithCaller
+  [ 5] java.lang.reflect.Constructor.newInstance
+  [ 6] java.security.Provider$Service.newInstanceOf
+  [ 7] java.security.Provider$Service.newInstanceUtil
+  [ 8] java.security.Provider$Service.newInstance
+  [ 9] sun.security.jca.GetInstance.getInstance
+  [10] sun.security.jca.GetInstance.getInstance
+  [11] java.security.MessageDigest.getInstance
+  [12] com.juoska.benchmark.CryptoBench.crypt
+  [13] com.juoska.benchmark.CryptoBench.execute
+  [14] com.juoska.benchmark.CryptoBench.main
+
+--- 20000600 ns (0.14%), 2 samples
+  [ 0] sun.security.provider.DigestBase.engineUpdate
+  [ 1] java.security.MessageDigest$Delegate.engineUpdate
+  [ 2] java.security.MessageDigest.update
+  [ 3] com.juoska.benchmark.CryptoBench.crypt
+  [ 4] com.juoska.benchmark.CryptoBench.execute
+  [ 5] com.juoska.benchmark.CryptoBench.main
+
+          ns  percent  samples  top
+  ----------  -------  -------  ---
+  2860051100   20.62%      286  md5_implCompress
+  2320030300   16.72%      231  jbyte_disjoint_arraycopy
+  1570053100   11.32%      157  java.lang.Integer.toUnsignedString0
+   910120200    6.56%       91  com.juoska.benchmark.RandomStringUtils.generate
+   830040900    5.98%       79  [vdso]
+   819935000    5.91%       82  com.juoska.benchmark.CryptoBench.crypt
+   800088700    5.77%       79  java.lang.Integer.formatUnsignedInt
+   460029300    3.32%       46  sun.security.jca.GetInstance.getInstance
+   420080000    3.03%       42  jlong_disjoint_arraycopy
+   350029300    2.52%       35  java.lang.AbstractStringBuilder.ensureCapacityInternal
+   240017300    1.73%       24  java.util.concurrent.atomic.AtomicLong.compareAndSet
+   180006400    1.30%       18  java.util.Random.<init>
+   140012500    1.01%       14  jbyte_arraycopy
+   140000300    1.01%       14  java.lang.StringLatin1.canEncode
+   130006400    0.94%       13  java.util.Random.next
+   109997900    0.79%       11  sun.security.provider.DigestBase.engineUpdate
+   100002700    0.72%       10  java.util.concurrent.ConcurrentHashMap.get
+    99999000    0.72%        9  java.security.MessageDigest.getInstance
+    70000800    0.50%        7  java.lang.AbstractStringBuilder.append
+    60014500    0.43%        6  java.util.Arrays.copyOfRange
+    60006400    0.43%        6  java.lang.invoke.VarHandleByteArrayAsInts$ArrayHandle.index
+    59991600    0.43%        6  sun.security.provider.DigestBase.<init>
+    50003200    0.36%        5  java.security.Provider.getService
+    49938500    0.36%        5  java.security.Provider$ServiceKey.equals
+    40000200    0.29%        4  jdk.internal.util.ArraysSupport.newLength
+    40000100    0.29%        4  sun.security.provider.DigestBase.engineDigest
+    30005100    0.22%        3  os::javaTimeNanos
+    30003800    0.22%        3  java.lang.String.coder
+    30002100    0.22%        3  java.lang.reflect.AccessibleObject.isAccessChecked
+    30002100    0.22%        3  com.juoska.benchmark.CryptoBench.execute
+    30001100    0.22%        3  jdk.internal.misc.Unsafe.putIntUnaligned
+    30000100    0.22%        3  java.lang.AbstractStringBuilder.newCapacity
+    29998700    0.22%        3  java.lang.String.encode
+    20093800    0.14%        2  /usr/lib/x86_64-linux-gnu/libc.so.6
+    20091500    0.14%        2  IdealLoopTree::check_safepts
+    20054400    0.14%        1  PhaseChaitin::post_allocate_copy_removal
+    20028700    0.14%        2  PhaseChaitin::gather_lrg_masks
+    20026700    0.14%        2  Interpreter
+    20006700    0.14%        2  java.security.Provider$Service.newInstance
+    20002700    0.14%        2  MutatorAllocRegion::retire
+    20001800    0.14%        2  sun.security.provider.MD5.<init>
+    20001500    0.14%        2  java.lang.ref.Reference.refersToImpl
+    20001000    0.14%        2  java.security.Provider$ServiceKey.hashCode
+    20000500    0.14%        2  sun.security.provider.MD5.implReset
+    19999700    0.14%        2  jdk.internal.misc.Unsafe.allocateUninitializedArray
+    19987200    0.14%        2  java.util.Arrays.copyOf
+    10493200    0.08%        1  HeapRegionManager::par_iterate
+    10351000    0.07%        1  G1ParScanThreadState::trim_queue_to_threshold
+    10196300    0.07%        1  DebugInformationRecorder::describe_scope
+    10168600    0.07%        1  __tls_get_addr
+    10154100    0.07%        1  G1CodeRootSet::contains
+    10138700    0.07%        1  PhaseCCP::analyze
+    10130200    0.07%        1  void UTF8::convert_to_unicode<unsigned short>
+    10096500    0.07%        1  PhaseChaitin::build_ifg_physical
+    10095600    0.07%        1  LinearScan::use_kind_of_input_operand
+    10094200    0.07%        1  NodeHash::hash_find_insert
+    10078600    0.07%        1  [no_Java_frame]
+    10077400    0.07%        1  PhaseIdealLoop::get_loop
+    10073900    0.07%        1  Node::Node
+    10073800    0.07%        1  PhaseIdealLoop::build_loop_late
+    10071400    0.07%        1  PhaseIdealLoop::split_if_with_blocks_pre
+    10058800    0.07%        1  ProjNode::Value
+    10051700    0.07%        1  MachCallJavaNode::in_RegMask
+    10029000    0.07%        1  java.util.StringTokenizer.scanToken
+    10024200    0.07%        1  sun.security.jca.ProviderConfig.getProvider
+    10019000    0.07%        1  ConstantPoolCacheEntry::set_direct_call
+    10016000    0.07%        1  TypeOopPtr::cleanup_speculative
+    10015500    0.07%        1  PhaseChaitin::Simplify
+    10015300    0.07%        1  CompileBroker::compile_method
+    10014500    0.07%        1  LoadPNode::Opcode
+    10011900    0.07%        1  MethodLiveness::BasicBlock::compute_gen_kill_range
+    10008500    0.07%        1  TypeOopPtr::TypeOopPtr
+    10003900    0.07%        1  java.security.Provider$Service.getProvider
+    10002700    0.07%        1  AccessInternal::PostRuntimeDispatch<G1BarrierSet::AccessBarrier<548964ul, G1BarrierSet>, (AccessInternal::BarrierType)2, 548964ul>::oop_access_barrier
+    10002600    0.07%        1  java.lang.String.getBytes
+    10002300    0.07%        1  ConnectionGraph::find_inst_mem
+    10002300    0.07%        1  PhaseChaitin::remove_bound_register_from_interfering_live_ranges
+    10002200    0.07%        1  java.lang.invoke.LambdaForm$NamedFunction.<init>
+    10002000    0.07%        1  pthread_mutex_unlock
+    10001600    0.07%        1  java.lang.reflect.Constructor.newInstanceWithCaller
+    10001600    0.07%        1  clock_gettime
+    10001300    0.07%        1  java.security.Provider$Service.getDefaultConstructor
+    10001300    0.07%        1  java.lang.String.hashCode
+    10001200    0.07%        1  java.security.MessageDigest$Delegate$CloneableDelegate.<init>
+    10000800    0.07%        1  java.lang.String.length
+    10000500    0.07%        1  java.lang.String.encodeUTF8
+    10000300    0.07%        1  java.security.Provider.checkInitialized
+    10000100    0.07%        1  sun.security.jca.GetInstance.checkSuperClass
+     9999200    0.07%        1  java.lang.String.startsWith
+     9998700    0.07%        1  java.lang.String.<init>
+     9998600    0.07%        1  java.lang.reflect.Constructor.newInstance
+     9998400    0.07%        1  java.lang.invoke.VarHandle.checkExactAccessMode
+     9997600    0.07%        1  sun.security.jca.ProviderList.getService
+     9996800    0.07%        1  Compile::identify_useful_nodes
+     9991200    0.07%        1  __tls_get_addr@plt
