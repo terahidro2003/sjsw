@@ -1,7 +1,6 @@
 package com.juoska;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
+import com.juoska.config.Config;
 import com.juoska.samplers.SamplerExecutorPipeline;
 import com.juoska.samplers.asyncprofiler.AsyncProfilerExecutor;
 import com.juoska.utils.CommandStarter;
@@ -19,9 +18,7 @@ public class StandaloneSampler {
     private static Config CONFIGURATION;
 
     public static void main(String[] args) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectReader reader = mapper.readerFor(SamplerExecutorPipeline.class);
-        CONFIGURATION = reader.readValue(new File("config.json"), Config.class);
+        CONFIGURATION = Config.retrieveConfiguration(new File("config.json"));
         try {
             System.out.println("Running java process");
             startProcess();
@@ -97,4 +94,5 @@ public class StandaloneSampler {
         }
         throw new RuntimeException("Couldn't find PID for specified main class.");
     }
+
 }

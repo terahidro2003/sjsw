@@ -3,7 +3,7 @@ package com.juoska.samplers.asyncprofiler;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.juoska.Config;
+import com.juoska.config.Config;
 import com.juoska.result.StackTraceData;
 import com.juoska.samplers.SamplerExecutorPipeline;
 

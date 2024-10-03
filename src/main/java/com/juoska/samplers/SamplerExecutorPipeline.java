@@ -1,6 +1,6 @@
 package com.juoska.samplers;
 
-import com.juoska.Config;
+import com.juoska.config.Config;
 
 import java.io.IOException;
 
