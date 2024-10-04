@@ -6,10 +6,13 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.juoska.config.Config;
 import com.juoska.result.StackTraceData;
 import com.juoska.samplers.SamplerExecutorPipeline;
+import com.juoska.utils.CommandStarter;
 
 import java.io.*;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
@@ -33,6 +36,64 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         if (exitCode != 0) {
             System.err.println("Error while executing async-profiler.");
         }
+    }
+
+    @Override
+    public void execute(Config config, Duration duration) throws InterruptedException, IOException {
+
+        if(duration == null || duration.getSeconds() <= 0) {
+            duration = Duration.ofSeconds(10);
+        }
+        
+        File rawOutputFile = new File(config.profilerRawOutputPath());
+        if(rawOutputFile.createNewFile()) {
+            System.out.println("Created new file: " + rawOutputFile.getAbsolutePath());
+        } else {
+            System.out.println("File probably already exists: " + rawOutputFile.getAbsolutePath());
+        }
+
+        Thread javaBenchmarkThread = getBenchmarkThread(config, duration);
+
+        CountDownLatch latch = new CountDownLatch(1);
+
+        Duration finalDuration = duration;
+        Thread waitingThread = new Thread(() -> {
+            try {
+                Thread.sleep(finalDuration.getSeconds() * 1000 + 1000);
+                javaBenchmarkThread.interrupt();
+                latch.countDown();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        javaBenchmarkThread.start();
+        waitingThread.start();
+        latch.await();
+
+        File output = new File(config.profilerRawOutputPath());
+        InputStream input = new FileInputStream(output);
+        var samples = parseProfile(input);
+        print(samples);
+    }
+
+    private static Thread getBenchmarkThread(Config config, Duration duration) {
+        List<String> command = new ArrayList<>();
+        command.add("java");
+        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + String.valueOf(duration.getSeconds()) + ",file=" + config.profilerRawOutputPath());
+        command.add("-Dfile.encoding=UTF-8");
+        command.add("-classpath");
+        command.add(config.classPath());
+        command.add(config.mainClass());
+        command.add("-XX:+PreserveFramePointer");
+        command.add("-XX:+UnlockDiagnosticVMOptions");
+        command.add("-XX:+DebugNonSafepoints");
+
+
+        Thread javaBenchmarkThread = new Thread(() -> {
+            CommandStarter.start(command.toArray(new String[0]));
+        });
+        return javaBenchmarkThread;
     }
 
     private static List<StackTraceData> parseProfile(InputStream asyncProfilerOutput) throws IOException {
