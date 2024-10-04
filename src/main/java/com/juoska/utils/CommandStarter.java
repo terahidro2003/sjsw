@@ -3,7 +3,10 @@ package com.juoska.utils;
 import java.io.IOException;
 
 public class CommandStarter {
-    public static void start(String... command) {
+
+    public volatile static long latestPid;
+
+    private static Process getProcess(String... command) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.redirectErrorStream(true); // Combine stdout and stderr
@@ -11,14 +14,23 @@ public class CommandStarter {
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
             Process process = processBuilder.start();
+            latestPid = process.pid();
 
             int exitCode = process.waitFor();
 
             if (exitCode != 0) {
                 System.err.println("Error executing perf script.");
             }
+
+            return process;
+
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
+            throw new RuntimeException(e);
         }
+    }
+
+    public static void start(String... command) {
+        Process process = getProcess(command);
     }
 }
