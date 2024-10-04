@@ -1,6 +1,7 @@
 {
   "classPath": "/mnt/f/Projects/lancaster/StandaloneSampler/target/classes",
   "mainClass": "com.juoska.benchmark.CryptoBench",
-  "profilerPath": "/home/hellstone/tmp/async-profiler/build/bin/asprof",
-  "outputPath": "/home/hellstone/output.sampler.json"
+  "profilerPath": "/home/hellstone/tmp/async-profiler/build/lib/libasyncProfiler.so",
+  "outputPath": "/home/hellstone/output.sampler.json",
+  "profilerRawOutputPath": "/home/hellstone/asprof.sjsw.output.raw.txt"
 }

@@ -7,14 +7,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Path;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
-public record Config(String classPath, String mainClass, String profilerPath, String outputPath) implements Serializable {
+public record Config(String classPath, String mainClass, String profilerPath, String outputPath, String profilerRawOutputPath) implements Serializable {
 
     public static Config retrieveConfiguration(String... args) {
-        if (args != null && args.length != 4) {
+        if (args != null && args.length != 5) {
             System.out.println("No config specified through arguments. Falling back to config.json");
             return retrieveConfiguration(new File("config.json"));
         }
@@ -24,8 +23,9 @@ public record Config(String classPath, String mainClass, String profilerPath, St
         String mainClass = args[1];
         String profilerPath = args[2];
         String outputPath = args[3];
+        String profilerRawOutputPath = args[4];
 
-        return new Config(classPath, mainClass, profilerPath, outputPath);
+        return new Config(classPath, mainClass, profilerPath, outputPath, profilerRawOutputPath);
     }
 
     public static Config retrieveConfiguration(File configPath) {

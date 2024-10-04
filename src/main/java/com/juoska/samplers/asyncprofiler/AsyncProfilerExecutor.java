@@ -16,10 +16,9 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     private static List<StackTraceData> result;
 
     @Override
-    public void execute(int pid, Config config) throws InterruptedException, IOException {
-        // TODO: specify duration in config
+    public void execute(long pid, Config config, Duration duration) throws InterruptedException, IOException {
         // TODO: allow custom frequency in hz specified in config
-        String[] command = {config.profilerPath(), "-d", "3", String.valueOf(pid)};
+        String[] command = {config.profilerPath(), "-d", String.valueOf(duration.getSeconds()), String.valueOf(pid)};
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
 
