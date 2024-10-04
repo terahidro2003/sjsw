@@ -25,12 +25,12 @@ public class CommandStarter {
             return process;
 
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            System.out.println("[ERROR]: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
     public static void start(String... command) {
-        Process process = getProcess(command);
+        getProcess(command);
     }
 }

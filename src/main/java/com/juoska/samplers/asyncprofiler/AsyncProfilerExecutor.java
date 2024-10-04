@@ -80,7 +80,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     private static Thread getBenchmarkThread(Config config, Duration duration) {
         List<String> command = new ArrayList<>();
         command.add("java");
-        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + String.valueOf(duration.getSeconds()) + ",file=" + config.profilerRawOutputPath());
+        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",file=" + config.profilerRawOutputPath());
         command.add("-Dfile.encoding=UTF-8");
         command.add("-classpath");
         command.add(config.classPath());
@@ -90,10 +90,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         command.add("-XX:+DebugNonSafepoints");
 
 
-        Thread javaBenchmarkThread = new Thread(() -> {
-            CommandStarter.start(command.toArray(new String[0]));
-        });
-        return javaBenchmarkThread;
+        return new Thread(() -> CommandStarter.start(command.toArray(new String[0])));
     }
 
     private static List<StackTraceData> parseProfile(InputStream asyncProfilerOutput) throws IOException {
