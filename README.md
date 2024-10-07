@@ -33,9 +33,9 @@ Be advised, that configuration file can be overridden by Java arguments if they 
 
 `profilerPath`: path to the async-profiler executable file. If you're using Linux or MacOS, you can use ones already included in this project:
     
-For linux: `./executables/linux/bin/asprof.so`
+For linux: `./executables/linux/lib/libasyncProfiler.so`
 
-For MacOS: `./executables/macos/bin/asprof.so`
+For MacOS: `./executables/macos/lib/libasyncProfiler.so`
 
 `outputPath`: output path of internal SJSW structure. In the next release, this will be changed to the serialized output of the call stack tree.
 
