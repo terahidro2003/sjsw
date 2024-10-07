@@ -5,8 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.juoska.config.Config;
 import com.juoska.result.StackTraceData;
+import com.juoska.result.StackTraceTreeBuilder;
+import com.juoska.result.StackTraceTreeNode;
 import com.juoska.samplers.SamplerExecutorPipeline;
 import com.juoska.utils.CommandStarter;
+import de.dagere.peass.config.MeasurementConfig;
+import de.dagere.peass.measurement.rca.data.CallTreeNode;
 
 import java.io.*;
 import java.time.Duration;
@@ -75,12 +79,39 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         InputStream input = new FileInputStream(output);
         var samples = parseProfile(input);
         print(samples);
+
+        // build my tree
+        StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
+        var tree = stackTraceTreeBuilder.build(samples);
+        tree.printTree();
+
+        // try to convert it to Peass tree
+        MeasurementConfig measurementConfig = new MeasurementConfig(1);
+        var pNode = new CallTreeNode("root", "", "", measurementConfig);
+        toPeasDS(tree, pNode);
+        System.out.println(pNode);
+    }
+
+    private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode) {
+        MeasurementConfig measurementConfig = new MeasurementConfig(1);
+
+        if(peasNode == null) {
+            peasNode = new CallTreeNode(node.getMethodName(), "", "", measurementConfig);
+        } else {
+            peasNode.appendChild(node.getMethodName(), "", "");
+            peasNode.addMeasurement("00000", node.getTimeTaken());
+        }
+
+        List<StackTraceTreeNode> children = node.getChildren();
+        for (StackTraceTreeNode child : children) {
+            toPeasDS(child, peasNode);
+        }
     }
 
     private static Thread getBenchmarkThread(Config config, Duration duration) {
         List<String> command = new ArrayList<>();
         command.add("java");
-        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + String.valueOf(duration.getSeconds()) + ",file=" + config.profilerRawOutputPath());
+        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",file=" + config.profilerRawOutputPath());
         command.add("-Dfile.encoding=UTF-8");
         command.add("-classpath");
         command.add(config.classPath());
@@ -89,11 +120,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         command.add("-XX:+UnlockDiagnosticVMOptions");
         command.add("-XX:+DebugNonSafepoints");
 
-
-        Thread javaBenchmarkThread = new Thread(() -> {
-            CommandStarter.start(command.toArray(new String[0]));
-        });
-        return javaBenchmarkThread;
+        return new Thread(() -> CommandStarter.start(command.toArray(new String[0])));
     }
 
     private static List<StackTraceData> parseProfile(InputStream asyncProfilerOutput) throws IOException {
@@ -109,9 +136,9 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
                     List<String> methods = new ArrayList<>();
 
-                    // TODO: sanitize '[0]' from method signatures
                     while ((line = br.readLine()) != null && line.trim().startsWith("[")) {
-                        methods.add(line.trim());
+                        var sanitizedLine = line.trim().substring(4);
+                        methods.add(sanitizedLine);
                     }
 
                     samples.add(new StackTraceData(methods, timeNs, percent, sampleCount));
