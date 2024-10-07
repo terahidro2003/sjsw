@@ -106,9 +106,9 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
                     List<String> methods = new ArrayList<>();
 
-                    // TODO: sanitize '[0]' from method signatures
                     while ((line = br.readLine()) != null && line.trim().startsWith("[")) {
-                        methods.add(line.trim());
+                        var sanitizedLine = line.trim().substring(4);
+                        methods.add(sanitizedLine);
                     }
 
                     samples.add(new StackTraceData(methods, timeNs, percent, sampleCount));
