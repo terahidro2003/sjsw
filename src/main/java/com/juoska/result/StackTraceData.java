@@ -31,4 +31,8 @@ public class StackTraceData implements Serializable {
     public Integer getTotalNumberOfSamples() {
         return totalNumberOfSamples;
     }
+
+    public void setMethods(List<String> methods) {
+        this.methods = methods;
+    }
 }

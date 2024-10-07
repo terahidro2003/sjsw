@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.juoska.config.Config;
 import com.juoska.result.StackTraceData;
+import com.juoska.result.StackTraceTreeBuilder;
 import com.juoska.samplers.SamplerExecutorPipeline;
 import com.juoska.utils.CommandStarter;
 
@@ -75,6 +76,9 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         InputStream input = new FileInputStream(output);
         var samples = parseProfile(input);
         print(samples);
+        StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
+        var tree = stackTraceTreeBuilder.build(samples);
+        tree.printTree();
     }
 
     private static Thread getBenchmarkThread(Config config, Duration duration) {
@@ -88,7 +92,6 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         command.add("-XX:+PreserveFramePointer");
         command.add("-XX:+UnlockDiagnosticVMOptions");
         command.add("-XX:+DebugNonSafepoints");
-
 
         return new Thread(() -> CommandStarter.start(command.toArray(new String[0])));
     }
