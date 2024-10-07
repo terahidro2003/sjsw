@@ -14,7 +14,7 @@ public class StandaloneSampler {
     public static void main(String[] args) {
         Config CONFIGURATION = Config.retrieveConfiguration(new File("config.json"));
         try {
-            executor.execute(CONFIGURATION, Duration.ofSeconds(60));
+            executor.execute(CONFIGURATION, Duration.ofSeconds(8));
             executor.write(CONFIGURATION.outputPath());
             System.exit(0);
         } catch (Exception e) {

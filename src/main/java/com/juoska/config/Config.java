@@ -12,6 +12,7 @@ import java.io.Serializable;
 @JsonSerialize
 public record Config(String classPath, String mainClass, String profilerPath, String outputPath, String profilerRawOutputPath) implements Serializable {
 
+    // TODO: test whether config properties passed as args work
     public static Config retrieveConfiguration(String... args) {
         if (args != null && args.length != 5) {
             System.out.println("No config specified through arguments. Falling back to config.json");

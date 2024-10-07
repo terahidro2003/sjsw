@@ -6,8 +6,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.juoska.config.Config;
 import com.juoska.result.StackTraceData;
 import com.juoska.result.StackTraceTreeBuilder;
+import com.juoska.result.StackTraceTreeNode;
 import com.juoska.samplers.SamplerExecutorPipeline;
 import com.juoska.utils.CommandStarter;
+import de.dagere.peass.config.MeasurementConfig;
+import de.dagere.peass.measurement.rca.data.CallTreeNode;
 
 import java.io.*;
 import java.time.Duration;
@@ -76,9 +79,33 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         InputStream input = new FileInputStream(output);
         var samples = parseProfile(input);
         print(samples);
+
+        // build my tree
         StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
         var tree = stackTraceTreeBuilder.build(samples);
         tree.printTree();
+
+        // try to convert it to Peass tree
+        MeasurementConfig measurementConfig = new MeasurementConfig(1);
+        var pNode = new CallTreeNode("root", "", "", measurementConfig);
+        toPeasDS(tree, pNode);
+        System.out.println(pNode);
+    }
+
+    private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode) {
+        MeasurementConfig measurementConfig = new MeasurementConfig(1);
+
+        if(peasNode == null) {
+            peasNode = new CallTreeNode(node.getMethodName(), "", "", measurementConfig);
+        } else {
+            peasNode.appendChild(node.getMethodName(), "", "");
+            peasNode.addMeasurement("00000", node.getTimeTaken());
+        }
+
+        List<StackTraceTreeNode> children = node.getChildren();
+        for (StackTraceTreeNode child : children) {
+            toPeasDS(child, peasNode);
+        }
     }
 
     private static Thread getBenchmarkThread(Config config, Duration duration) {
