@@ -3,6 +3,7 @@ package com.juoska.config;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.juoska.utils.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,10 +33,24 @@ public record Config(String classPath, String mainClass, String profilerPath, St
     public static Config retrieveConfiguration(File configPath) {
         ObjectReader reader = Constants.OBJECT_MAPPER.readerFor(Config.class);
         try {
-            return reader.readValue(configPath);
+            Config config = reader.readValue(configPath);
+            if(!config.classPath.isEmpty()) {
+                try {
+                    String classPath = FileUtils.readFileToString(config.classPath);
+                    return adjustClasspathValue(config, classPath);
+                } catch (IOException e) {
+                    return config;
+                }
+            } else {
+                return config;
+            }
         } catch (IOException e) {
             System.out.println("Failed to read config file: " + configPath);
             throw new RuntimeException(e);
         }
+    }
+
+    public static Config adjustClasspathValue(Config prev, String classPath) {
+        return new Config(classPath, prev.mainClass, prev.profilerPath, prev.outputPath, prev.profilerRawOutputPath);
     }
 }
