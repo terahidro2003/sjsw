@@ -87,10 +87,9 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         tree.printTree();
 
         // try to convert it to Peass tree
-        MeasurementConfig measurementConfig = new MeasurementConfig(1);
-        var pNode = new CallTreeNode("root", "", "", measurementConfig);
-        toPeasDS(tree, pNode);
-        System.out.println(pNode);
+//        MeasurementConfig measurementConfig = new MeasurementConfig(1);
+//        var pNode = new CallTreeNode("root", "", "", measurementConfig);
+//        toPeasDS(tree, pNode);
     }
 
     private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode) {
