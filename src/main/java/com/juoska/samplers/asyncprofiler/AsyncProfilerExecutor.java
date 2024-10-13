@@ -15,6 +15,7 @@ import de.dagere.peass.measurement.rca.data.CallTreeNode;
 import java.io.*;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -113,12 +114,15 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         command.add("java");
         command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",file=" + config.profilerRawOutputPath());
         command.add("-Dfile.encoding=UTF-8");
-        command.add("-classpath");
+        command.add("-cp");
         command.add(config.classPath());
-        command.add(config.mainClass());
-        command.add("-XX:+PreserveFramePointer");
-        command.add("-XX:+UnlockDiagnosticVMOptions");
-        command.add("-XX:+DebugNonSafepoints");
+
+        if(config.mainClass().contains(" ")) {
+            var mains = config.mainClass().split(" ");
+            command.addAll(Arrays.asList(mains));
+        } else {
+            command.add(config.mainClass());
+        }
 
         return new Thread(() -> CommandStarter.start(command.toArray(new String[0])));
     }
