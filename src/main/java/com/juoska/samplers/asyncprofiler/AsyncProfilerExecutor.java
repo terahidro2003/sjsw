@@ -23,6 +23,10 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
     private static List<StackTraceData> result;
 
+    private volatile boolean benchmarkException = false;
+
+    private StackTraceTreeNode root;
+
     @Override
     public void execute(long pid, Config config, Duration duration) throws InterruptedException, IOException {
         // TODO: allow custom frequency in hz specified in config
@@ -76,20 +80,23 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         waitingThread.start();
         latch.await();
 
+        if(benchmarkException) {
+            throw new RuntimeException("Benchmark exception");
+        }
+
         File output = new File(config.profilerRawOutputPath());
         InputStream input = new FileInputStream(output);
         var samples = parseProfile(input);
-        print(samples);
 
         // build my tree
-        StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
-        var tree = stackTraceTreeBuilder.build(samples);
+        var tree = generateTree(samples);
+        root = tree;
         tree.printTree();
+    }
 
-        // try to convert it to Peass tree
-//        MeasurementConfig measurementConfig = new MeasurementConfig(1);
-//        var pNode = new CallTreeNode("root", "", "", measurementConfig);
-//        toPeasDS(tree, pNode);
+    public StackTraceTreeNode generateTree(List<StackTraceData> samples) {
+        StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
+        return stackTraceTreeBuilder.build(samples);
     }
 
     private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode) {
@@ -108,7 +115,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         }
     }
 
-    private static Thread getBenchmarkThread(Config config, Duration duration) {
+    private Thread getBenchmarkThread(Config config, Duration duration) {
         List<String> command = new ArrayList<>();
         command.add("java");
         command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",file=" + config.profilerRawOutputPath());
@@ -123,7 +130,14 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
             command.add(config.mainClass());
         }
 
-        return new Thread(() -> CommandStarter.start(command.toArray(new String[0])));
+        return new Thread(() -> {
+            try {
+                CommandStarter.start(command.toArray(new String[0]));
+            } catch (Exception e) {
+                this.benchmarkException = true;
+                throw new RuntimeException("Benchmark process failed to start", e);
+            }
+        });
     }
 
     private static List<StackTraceData> parseProfile(InputStream asyncProfilerOutput) throws IOException {
@@ -175,5 +189,10 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public StackTraceTreeNode getStackTraceTree() {
+        return root;
     }
 }
