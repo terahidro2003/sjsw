@@ -8,6 +8,7 @@ import com.juoska.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
@@ -34,23 +35,30 @@ public record Config(String classPath, String mainClass, String profilerPath, St
         ObjectReader reader = Constants.OBJECT_MAPPER.readerFor(Config.class);
         try {
             Config config = reader.readValue(configPath);
-            if(!config.classPath.isEmpty()) {
-                try {
-                    String classPath = FileUtils.readFileToString(config.classPath);
-                    return adjustClasspathValue(config, classPath);
-                } catch (IOException e) {
-                    return config;
-                }
-            } else {
-                return config;
+            if(!config.hasValidProfilerExecutable()) {
+                throw new IllegalStateException("Profiler executable could not be found");
             }
+            return adjustClasspathValue(config);
         } catch (IOException e) {
             System.out.println("Failed to read config file: " + configPath);
             throw new RuntimeException(e);
         }
     }
 
-    public static Config adjustClasspathValue(Config prev, String classPath) {
-        return new Config(classPath, prev.mainClass, prev.profilerPath, prev.outputPath, prev.profilerRawOutputPath);
+    private static Config adjustClasspathValue(Config config) {
+        if(!config.classPath.isEmpty()) {
+            try {
+                String classPath = FileUtils.readFileToString(config.classPath);
+                return new Config(classPath, config.mainClass, config.profilerPath, config.outputPath, config.profilerRawOutputPath);
+            } catch (IOException e) {
+                return config;
+            }
+        } else {
+            return config;
+        }
+    }
+
+    private boolean hasValidProfilerExecutable() {
+        return Files.exists(new File(profilerPath).toPath());
     }
 }
