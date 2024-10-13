@@ -19,7 +19,7 @@ public class CommandStarter {
             int exitCode = process.waitFor();
 
             if (exitCode != 0) {
-                System.err.println("Error executing perf script.");
+                throw new RuntimeException("Error occurred during benchmark execution");
             }
 
             return process;
