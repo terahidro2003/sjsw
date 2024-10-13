@@ -27,3 +27,14 @@ mvn clean package && java -jar target/precision-experiments-rca-0.1-SNAPSHOT.jar
 ```text
 /{absolute path}/example-project/target/test-classes:/{absolute path}/example-project/target/classes:........
 ```
+
+## Running with SJSW
+```json
+{
+  "classPath": "/mnt/f/Projects/lancaster/example-project/cp.txt", // your path to text file containing classpath
+  "mainClass": "org.junit.runner.JUnitCore de.dagere.peass.MainTest", 
+  "profilerPath": "./executables/linux/lib/libasyncProfiler.so",
+  "outputPath": "output.sampler.json",
+  "profilerRawOutputPath": "asprof.sjsw.output.raw.json"
+}
+```
