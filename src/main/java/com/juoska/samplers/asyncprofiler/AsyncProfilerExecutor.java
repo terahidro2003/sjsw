@@ -154,7 +154,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
                     List<String> methods = new ArrayList<>();
 
                     while ((line = br.readLine()) != null && line.trim().startsWith("[")) {
-                        var sanitizedLine = line.trim().substring(4);
+                        var sanitizedLine = line.trim().substring(5);
                         methods.add(sanitizedLine);
                     }
 
