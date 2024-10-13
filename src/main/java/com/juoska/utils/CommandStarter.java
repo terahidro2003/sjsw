@@ -19,18 +19,18 @@ public class CommandStarter {
             int exitCode = process.waitFor();
 
             if (exitCode != 0) {
-                System.err.println("Error executing perf script.");
+                throw new RuntimeException("Error occurred during benchmark execution");
             }
 
             return process;
 
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            System.out.println("[ERROR]: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
     public static void start(String... command) {
-        Process process = getProcess(command);
+        getProcess(command);
     }
 }
