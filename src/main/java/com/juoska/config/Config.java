@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.juoska.utils.FileUtils;
+import groovy.util.logging.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,23 +15,22 @@ import java.nio.file.Files;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
+@Slf4j
 public record Config(String classPath, String mainClass, String profilerPath, String outputPath, String profilerRawOutputPath) implements Serializable {
+
+    private static final Logger log = LoggerFactory.getLogger(Config.class);
 
     // TODO: test whether config properties passed as args work
     public static Config retrieveConfiguration(String... args) {
-        if (args != null && args.length != 5) {
-            System.out.println("No config specified through arguments. Falling back to config.json");
+        if (args != null && args.length != 1) {
+            log.warn("No config specified through arguments. Falling back to config.json");
             return retrieveConfiguration(new File("config.json"));
         }
 
         assert args != null;
-        String classPath = args[0];
-        String mainClass = args[1];
-        String profilerPath = args[2];
-        String outputPath = args[3];
-        String profilerRawOutputPath = args[4];
+        String configFilePath = args[0];
 
-        return new Config(classPath, mainClass, profilerPath, outputPath, profilerRawOutputPath);
+        return retrieveConfiguration(new File(configFilePath));
     }
 
     public static Config retrieveConfiguration(File configPath) {
@@ -40,7 +42,7 @@ public record Config(String classPath, String mainClass, String profilerPath, St
             }
             return adjustClasspathValue(config);
         } catch (IOException e) {
-            System.out.println("Failed to read config file: " + configPath);
+            log.error("Failed to read config file: {}", configPath, e);
             throw new RuntimeException(e);
         }
     }
