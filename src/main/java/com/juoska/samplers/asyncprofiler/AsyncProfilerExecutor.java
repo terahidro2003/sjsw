@@ -5,18 +5,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.juoska.config.Config;
 import com.juoska.result.StackTraceData;
+import com.juoska.result.StackTraceTreeBuilder;
+import com.juoska.result.StackTraceTreeNode;
 import com.juoska.samplers.SamplerExecutorPipeline;
 import com.juoska.utils.CommandStarter;
+import de.dagere.peass.config.MeasurementConfig;
+import de.dagere.peass.measurement.rca.data.CallTreeNode;
+import groovy.util.logging.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+@Slf4j
 public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
+    private static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutor.class);
     private static List<StackTraceData> result;
+
+    private volatile boolean benchmarkException = false;
+
+    private StackTraceTreeNode root;
 
     @Override
     public void execute(long pid, Config config, Duration duration) throws InterruptedException, IOException {
@@ -34,7 +48,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
         int exitCode = process.waitFor();
         if (exitCode != 0) {
-            System.err.println("Error while executing async-profiler.");
+            log.error("Failed to execute async profiler. Async profiler returned exit code 0");
         }
     }
 
@@ -47,9 +61,9 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         
         File rawOutputFile = new File(config.profilerRawOutputPath());
         if(rawOutputFile.createNewFile()) {
-            System.out.println("Created new file: " + rawOutputFile.getAbsolutePath());
+            log.info("Created new file: {}", rawOutputFile.getAbsolutePath());
         } else {
-            System.out.println("File probably already exists: " + rawOutputFile.getAbsolutePath());
+            log.info("File probably already exists: {}", rawOutputFile.getAbsolutePath());
         }
 
         Thread javaBenchmarkThread = getBenchmarkThread(config, duration);
@@ -63,7 +77,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
                 javaBenchmarkThread.interrupt();
                 latch.countDown();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                log.warn("Benchmark process interrupted", e);
             }
         });
 
@@ -71,29 +85,64 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         waitingThread.start();
         latch.await();
 
+        if(benchmarkException) {
+            throw new RuntimeException("Benchmark exception");
+        }
+
         File output = new File(config.profilerRawOutputPath());
         InputStream input = new FileInputStream(output);
         var samples = parseProfile(input);
-        print(samples);
+
+        // build my tree
+        var tree = generateTree(samples);
+        root = tree;
+        tree.printTree();
     }
 
-    private static Thread getBenchmarkThread(Config config, Duration duration) {
+    public StackTraceTreeNode generateTree(List<StackTraceData> samples) {
+        StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
+        return stackTraceTreeBuilder.build(samples);
+    }
+
+    private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode) {
+        MeasurementConfig measurementConfig = new MeasurementConfig(1);
+
+        if(peasNode == null) {
+            peasNode = new CallTreeNode(node.getMethodName(), "", "", measurementConfig);
+        } else {
+            peasNode.appendChild(node.getMethodName(), "", "");
+            peasNode.addMeasurement("00000", node.getTimeTaken());
+        }
+
+        List<StackTraceTreeNode> children = node.getChildren();
+        for (StackTraceTreeNode child : children) {
+            toPeasDS(child, peasNode);
+        }
+    }
+
+    private Thread getBenchmarkThread(Config config, Duration duration) {
         List<String> command = new ArrayList<>();
         command.add("java");
-        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + String.valueOf(duration.getSeconds()) + ",file=" + config.profilerRawOutputPath());
+        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",file=" + config.profilerRawOutputPath());
         command.add("-Dfile.encoding=UTF-8");
-        command.add("-classpath");
+        command.add("-cp");
         command.add(config.classPath());
-        command.add(config.mainClass());
-        command.add("-XX:+PreserveFramePointer");
-        command.add("-XX:+UnlockDiagnosticVMOptions");
-        command.add("-XX:+DebugNonSafepoints");
 
+        if(config.mainClass().contains(" ")) {
+            var mains = config.mainClass().split(" ");
+            command.addAll(Arrays.asList(mains));
+        } else {
+            command.add(config.mainClass());
+        }
 
-        Thread javaBenchmarkThread = new Thread(() -> {
-            CommandStarter.start(command.toArray(new String[0]));
+        return new Thread(() -> {
+            try {
+                CommandStarter.start(command.toArray(new String[0]));
+            } catch (Exception e) {
+                this.benchmarkException = true;
+                throw new RuntimeException("Benchmark process failed to start", e);
+            }
         });
-        return javaBenchmarkThread;
     }
 
     private static List<StackTraceData> parseProfile(InputStream asyncProfilerOutput) throws IOException {
@@ -109,9 +158,9 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
                     List<String> methods = new ArrayList<>();
 
-                    // TODO: sanitize '[0]' from method signatures
                     while ((line = br.readLine()) != null && line.trim().startsWith("[")) {
-                        methods.add(line.trim());
+                        var sanitizedLine = line.trim().substring(5);
+                        methods.add(sanitizedLine);
                     }
 
                     samples.add(new StackTraceData(methods, timeNs, percent, sampleCount));
@@ -145,5 +194,10 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public StackTraceTreeNode getStackTraceTree() {
+        return root;
     }
 }

@@ -3,23 +3,27 @@ package com.juoska;
 import com.juoska.config.Config;
 import com.juoska.samplers.SamplerExecutorPipeline;
 import com.juoska.samplers.asyncprofiler.AsyncProfilerExecutor;
+import groovy.util.logging.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Duration;
 
+@Slf4j
 public class StandaloneSampler {
 
     private static final SamplerExecutorPipeline executor = new AsyncProfilerExecutor();
-    private static Config CONFIGURATION;
+    private static final Logger log = LoggerFactory.getLogger(StandaloneSampler.class);
 
     public static void main(String[] args) {
-        CONFIGURATION = Config.retrieveConfiguration(new File("config.json"));
+        Config CONFIGURATION = Config.retrieveConfiguration(new File("config.json"));
         try {
-            executor.execute(CONFIGURATION, Duration.ofSeconds(60));
+            executor.execute(CONFIGURATION, Duration.ofSeconds(8));
             executor.write(CONFIGURATION.outputPath());
             System.exit(0);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error during execution", e);
         }
     }
 }
