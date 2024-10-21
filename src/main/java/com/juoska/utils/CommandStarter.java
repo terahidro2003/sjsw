@@ -1,9 +1,13 @@
 package com.juoska.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 public class CommandStarter {
 
+    private static final Logger log = LoggerFactory.getLogger(CommandStarter.class);
     public volatile static long latestPid;
 
     private static Process getProcess(String... command) {
@@ -16,7 +20,12 @@ public class CommandStarter {
             Process process = processBuilder.start();
             latestPid = process.pid();
 
-            int exitCode = process.waitFor();
+            int exitCode = 0;
+            try {
+                exitCode = process.waitFor();
+            } catch (InterruptedException e) {
+                log.info("Process was interrupted. Business as usual. ");
+            }
 
             if (exitCode != 0) {
                 throw new RuntimeException("Error occurred during benchmark execution");
@@ -24,8 +33,8 @@ public class CommandStarter {
 
             return process;
 
-        } catch (IOException | InterruptedException e) {
-            System.out.println("[ERROR]: " + e.getMessage());
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }

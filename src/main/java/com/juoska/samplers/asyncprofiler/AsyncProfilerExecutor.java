@@ -11,6 +11,9 @@ import com.juoska.samplers.SamplerExecutorPipeline;
 import com.juoska.utils.CommandStarter;
 import de.dagere.peass.config.MeasurementConfig;
 import de.dagere.peass.measurement.rca.data.CallTreeNode;
+import groovy.util.logging.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.time.Duration;
@@ -19,8 +22,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+@Slf4j
 public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
+    private static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutor.class);
     private static List<StackTraceData> result;
 
     private volatile boolean benchmarkException = false;
@@ -43,7 +48,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
         int exitCode = process.waitFor();
         if (exitCode != 0) {
-            System.err.println("Error while executing async-profiler.");
+            log.error("Failed to execute async profiler. Async profiler returned exit code 0");
         }
     }
 
@@ -56,9 +61,9 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         
         File rawOutputFile = new File(config.profilerRawOutputPath());
         if(rawOutputFile.createNewFile()) {
-            System.out.println("Created new file: " + rawOutputFile.getAbsolutePath());
+            log.info("Created new file: {}", rawOutputFile.getAbsolutePath());
         } else {
-            System.out.println("File probably already exists: " + rawOutputFile.getAbsolutePath());
+            log.info("File probably already exists: {}", rawOutputFile.getAbsolutePath());
         }
 
         Thread javaBenchmarkThread = getBenchmarkThread(config, duration);
@@ -72,7 +77,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
                 javaBenchmarkThread.interrupt();
                 latch.countDown();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                log.warn("Benchmark process interrupted", e);
             }
         });
 
