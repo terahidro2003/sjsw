@@ -3,13 +3,18 @@ package com.juoska;
 import com.juoska.config.Config;
 import com.juoska.samplers.SamplerExecutorPipeline;
 import com.juoska.samplers.asyncprofiler.AsyncProfilerExecutor;
+import groovy.util.logging.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Duration;
 
+@Slf4j
 public class StandaloneSampler {
 
     private static final SamplerExecutorPipeline executor = new AsyncProfilerExecutor();
+    private static final Logger log = LoggerFactory.getLogger(StandaloneSampler.class);
 
     public static void main(String[] args) {
         Config CONFIGURATION = Config.retrieveConfiguration(new File("config.json"));
@@ -18,7 +23,7 @@ public class StandaloneSampler {
             executor.write(CONFIGURATION.outputPath());
             System.exit(0);
         } catch (Exception e) {
-            System.out.println("[ERROR] " + e.getMessage());
+            log.error("Error during execution", e);
         }
     }
 }
