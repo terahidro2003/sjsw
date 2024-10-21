@@ -3,10 +3,12 @@ package com.juoska.samplers.asyncprofiler;
 import com.juoska.config.Config;
 import com.juoska.result.StackTraceTreeNode;
 import com.juoska.samplers.SamplerExecutorPipeline;
+import com.juoska.utils.CommandStarter;
 import groovy.util.logging.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
@@ -16,11 +18,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 class AsyncProfilerExecutorIntegrationTest {
+
+    final File benchmarkTargetDir = new File("src/test/resources/TestBenchmark/target/classes");
+    final File benchmarkProjectDir = new File("src/test/resources/TestBenchmark");
+
     @Test
     public void test() {
+        // run mvn install on benchmark application
+        CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+
         // config
         Config config = new Config(
-                "./target/classes",
+                benchmarkTargetDir.getAbsolutePath(),
                 "com.juoska.benchmark.TestBenchmark",
                 "./executables/linux/lib/libasyncProfiler.so",
                 "./output.sampler-test.json",
