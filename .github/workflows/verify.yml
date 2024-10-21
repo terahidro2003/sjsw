@@ -20,6 +20,6 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Configure perf
-      run: sudo sysctl kernel.perf_event_paranoid=1 && make -j`nproc` && make test
+      run: sudo sysctl kernel.perf_event_paranoid=1
     - name: Verify
       run: mvn -B verify --file pom.xml
