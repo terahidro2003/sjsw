@@ -15,9 +15,14 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+
       - name: Configure perf
         run: sudo sysctl kernel.perf_event_paranoid=1
-      - name: Publish package to Github
-        run: mvn --batch-mode deploy
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Publish to GitHub Packages Apache Maven
+        run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ github.token }}
