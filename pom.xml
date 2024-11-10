@@ -6,7 +6,7 @@
 
     <groupId>com.juoska</groupId>
     <artifactId>StandaloneSampler</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -95,9 +95,6 @@
             <resource>
                 <directory>src/test/resources</directory>
             </resource>
-<!--            <resource>-->
-<!--                <directory>src/main/resources</directory>-->
-<!--            </resource>-->
         </resources>
     </build>
 
@@ -113,5 +110,13 @@
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/terahidro2003/sjsw</url>
+        </repository>
+    </distributionManagement>
 
 </project>
