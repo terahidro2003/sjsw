@@ -97,6 +97,9 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         var tree = generateTree(samples);
         root = tree;
         tree.printTree();
+
+        CallTreeNode callTreeNode = null;
+        toPeasDS(root, callTreeNode);
     }
 
     public StackTraceTreeNode generateTree(List<StackTraceData> samples) {
@@ -105,19 +108,50 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode) {
-        MeasurementConfig measurementConfig = new MeasurementConfig(1);
+        MeasurementConfig measurementConfig = new MeasurementConfig(1, "00000", "00000");
 
         if(peasNode == null) {
-            peasNode = new CallTreeNode(node.getMethodName(), "", "", measurementConfig);
+            String methodNameWithNew = node.getMethodName() + "()";
+            if(node.getMethodName().contains("<init>")) {
+                methodNameWithNew = "new " + node.getMethodName() + "()";
+            }
+            peasNode = new CallTreeNode(node.getMethodName(),
+                    methodNameWithNew,
+                    methodNameWithNew,
+                    measurementConfig);
+
+            createPeassNode(node, peasNode);
         } else {
-            peasNode.appendChild(node.getMethodName(), "", "");
-            peasNode.addMeasurement("00000", node.getTimeTaken());
+            createPeassNode(node, peasNode);
+            peasNode = peasNode.getChildByKiekerPattern(node.getMethodName() + "()");
         }
 
         List<StackTraceTreeNode> children = node.getChildren();
         for (StackTraceTreeNode child : children) {
             toPeasDS(child, peasNode);
         }
+    }
+
+    private void createPeassNode(StackTraceTreeNode node, CallTreeNode peasNode) {
+        peasNode.initCommitData();
+        peasNode.initVMData("00000");
+        peasNode.addMeasurement("00000", node.getTimeTaken());
+
+        // check is done as a workaround for Peass kieker pattern check
+        if(node.getMethodName().contains("<init>")) {
+            String methodNameWithNew = "new " + node.getMethodName() + "()";
+            peasNode.appendChild(node.getMethodName(),
+                    methodNameWithNew,
+                    methodNameWithNew
+            );
+        } else {
+            peasNode.appendChild(node.getMethodName(),
+                    node.getMethodName() + "()",
+                    node.getMethodName() + "()"
+            );
+        }
+
+        peasNode.createStatistics("00000");
     }
 
     private Thread getBenchmarkThread(Config config, Duration duration) {
