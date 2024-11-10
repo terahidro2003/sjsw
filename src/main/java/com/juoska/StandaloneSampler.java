@@ -3,14 +3,12 @@ package com.juoska;
 import com.juoska.config.Config;
 import com.juoska.samplers.SamplerExecutorPipeline;
 import com.juoska.samplers.asyncprofiler.AsyncProfilerExecutor;
-import groovy.util.logging.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Duration;
 
-@Slf4j
 public class StandaloneSampler {
 
     private static final SamplerExecutorPipeline executor = new AsyncProfilerExecutor();
