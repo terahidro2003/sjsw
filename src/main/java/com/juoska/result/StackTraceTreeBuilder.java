@@ -23,6 +23,14 @@ public class StackTraceTreeBuilder {
         });
 
         organizedSamples.forEach(sampleBlock -> addSampleBlock(root, sampleBlock));
+
+        // calculate measurement values for the root node
+        root.getChildren().forEach(child -> {
+            root.setTimeTaken(root.getTimeTaken() + child.getTimeTaken());
+            root.setPercentageOfTotalTimeTaken(root.getPercentageOfTotalTimeTaken() + child.getPercentageOfTotalTimeTaken());
+            root.setTotalNumberOfSamples(root.getTotalNumberOfSamples() + child.getTotalNumberOfSamples());
+        });
+
         return root;
     }
 

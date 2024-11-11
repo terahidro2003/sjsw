@@ -55,6 +55,10 @@ public class StackTraceTreeNode {
         this.totalNumberOfSamples = totalNumberOfSamples;
     }
 
+    private List<StackTraceTreeNode> sortChildren(List<StackTraceTreeNode> children) {
+        return children.stream().sorted((c1, c2) -> c1.getTimeTaken() <= c2.getTimeTaken()?1:-1).toList();
+    }
+
     public void printTree() {
         printTreeRecursive(this, "", true);
     }
@@ -62,12 +66,12 @@ public class StackTraceTreeNode {
     private void printTreeRecursive(StackTraceTreeNode node, String prefix, boolean isLast) {
         if (node.getMethodName() != null) {
             System.out.println(prefix + (isLast ? "└────── " : "├────── ") + node.getMethodName() +
-                    " [Time: " + node.getTimeTaken() + "ms, " +
+                    " [Time: " + node.getTimeTaken() + "ns (" + node.getTimeTaken() / (1000*1000) + "ms), " +
                     "Percent: " + node.getPercentageOfTotalTimeTaken() + "%, " +
                     "Samples: " + node.getTotalNumberOfSamples() + "]");
         }
 
-        List<StackTraceTreeNode> children = node.getChildren();
+        List<StackTraceTreeNode> children = sortChildren(node.getChildren());
         for (int i = 0; i < children.size(); i++) {
             printTreeRecursive(children.get(i), prefix + (isLast ? "    " : "│   "), i == children.size() - 1);
         }
