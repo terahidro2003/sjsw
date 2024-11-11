@@ -7,6 +7,8 @@ import com.juoska.utils.CommandStarter;
 import groovy.util.logging.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Duration;
@@ -19,22 +21,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 class AsyncProfilerExecutorIntegrationTest {
 
+    private static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutorIntegrationTest.class);
     final File benchmarkTargetDir = new File("src/test/resources/TestBenchmark/target/classes");
     final File benchmarkProjectDir = new File("src/test/resources/TestBenchmark");
 
     @Test
     public void test() {
+
         // run mvn install on benchmark application
         CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
 
         // config
-        Config config = new Config(
-                benchmarkTargetDir.getAbsolutePath(),
-                "com.juoska.benchmark.TestBenchmark",
-                "./executables/linux/lib/libasyncProfiler.so",
-                "./output.sampler-test.json",
-                "./asprof.sjsw.output.test.raw.json"
-        );
+        Config config = determineConfiguration();
         Duration duration = Duration.ofSeconds(10);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
 
@@ -46,6 +44,37 @@ class AsyncProfilerExecutorIntegrationTest {
         Set<String> methodNames = Set.of("com.juoska.benchmark.TestBenchmark.methodB",
                 "com.juoska.benchmark.TestBenchmark.methodA", "com.juoska.benchmark.TestBenchmark.main");
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
+    }
+
+    private Config determineConfiguration() {
+        Config macOS = new Config(
+                benchmarkTargetDir.getAbsolutePath(),
+                "com.juoska.benchmark.TestBenchmark",
+                "./executables/macos/lib/libasyncProfiler.dylib",
+                "./output.sampler-test.json",
+                "./asprof.sjsw.output.test.raw.json"
+        );
+        Config linux = new Config(
+                benchmarkTargetDir.getAbsolutePath(),
+                "com.juoska.benchmark.TestBenchmark",
+                "./executables/linux/lib/libasyncProfiler.so",
+                "./output.sampler-test.json",
+                "./asprof.sjsw.output.test.raw.json"
+        );
+
+        String OS = System.getProperty("os.name").toLowerCase();
+        log.info("Current OS: {}", OS);
+        if(OS.contains("windows")) {
+            log.error("Windows is not supported");
+        } else if(OS.contains("linux")) {
+            return linux;
+        } else if(OS.contains("mac")) {
+            return macOS;
+        } else {
+            log.error("Unsupported OS: {}", OS);
+            throw new IllegalStateException("Unsupported OS: " + OS);
+        }
+        throw new IllegalStateException("Failed to determine configuration for the test");
     }
 
     private Set<String> isTreeAssumedValid(StackTraceTreeNode root) {
