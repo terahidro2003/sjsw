@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 class AsyncProfilerExecutorIntegrationTest {
 
-    final File benchmarkTargetDir = new File("src/test/resources/TestBenchmark/target/classes");
+    final File benchmarkTargetDir = new File("src/test/resources/TestBenchmark/target");
     final File benchmarkProjectDir = new File("src/test/resources/TestBenchmark");
 
     @Test
@@ -29,10 +29,39 @@ class AsyncProfilerExecutorIntegrationTest {
 
         // config
         Config config = new Config(
-                benchmarkTargetDir.getAbsolutePath(),
+                benchmarkTargetDir.getAbsolutePath() + "/classes",
                 "com.juoska.benchmark.TestBenchmark",
-                "./executables/linux/lib/libasyncProfiler.so",
-                "./output.sampler-test.json",
+                "./executables/macos/lib/libasyncProfiler.dylib",
+                "./output.sampler-test" + System.currentTimeMillis()+".json",
+                "./asprof.sjsw.output.test.raw.json"
+        );
+        Duration duration = Duration.ofSeconds(10);
+        SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
+
+        // run (and assert whether both phases throw an exception)
+        Assertions.assertDoesNotThrow(() -> pipeline.execute(config, duration));
+        Assertions.assertDoesNotThrow(() -> pipeline.write("destination.json"));
+
+        // assert that tree at least includes benchmark method names
+        Set<String> methodNames = Set.of("com.juoska.benchmark.TestBenchmark.methodB",
+                "com.juoska.benchmark.TestBenchmark.methodA", "com.juoska.benchmark.TestBenchmark.main");
+        assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
+    }
+
+    @Test
+    public void testWithJarFile() {
+        // run mvn install on benchmark application
+        CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+
+        // compile JAR file for TestBenchmark
+        CommandStarter.start("mvn", "clean", "package", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+
+        // config
+        Config config = new Config(
+                benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
+                "com.juoska.benchmark.TestBenchmark",
+                "./executables/macos/lib/libasyncProfiler.dylib",
+                "./output.sampler-test-jar" + System.currentTimeMillis()+".json",
                 "./asprof.sjsw.output.test.raw.json"
         );
         Duration duration = Duration.ofSeconds(10);
