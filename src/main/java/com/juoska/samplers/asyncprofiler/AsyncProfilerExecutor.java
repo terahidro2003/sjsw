@@ -164,7 +164,12 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         command.add("java");
         command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",event=cpu,clock=monotonic,file=" + config.profilerRawOutputPath());
         command.add("-Dfile.encoding=UTF-8");
-        command.add("-cp");
+
+        if(config.classPath().contains(".jar")) {
+            command.add("-jar");
+        } else {
+            command.add("-cp");
+        }
         command.add(config.classPath());
 
         if(config.mainClass().contains(" ")) {

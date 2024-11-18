@@ -48,7 +48,7 @@ public record Config(String classPath, String mainClass, String profilerPath, St
     }
 
     private static Config adjustClasspathValue(Config config) {
-        if(!config.classPath.isEmpty()) {
+        if(!config.classPath.contains(".jar") && config.classPath.contains(".txt")) {
             try {
                 String classPath = FileUtils.readFileToString(config.classPath);
                 return new Config(classPath, config.mainClass, config.profilerPath, config.outputPath, config.profilerRawOutputPath);
