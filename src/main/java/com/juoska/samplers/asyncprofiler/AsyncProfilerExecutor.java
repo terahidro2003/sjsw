@@ -54,16 +54,19 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
     @Override
     public void execute(Config config, Duration duration) throws InterruptedException, IOException {
-
+        log.info("Executing async-profiler sampler with the following configuration: classPath: {}, mainClass: {}, profilerPath: {}, tempFilePath: {}, profilerRawOutputPath: {}", config.classPath(), config.mainClass(), config.profilerPath(), config.outputPath(), config.profilerRawOutputPath());
         if(duration == null || duration.getSeconds() <= 0) {
+            log.warn("No duration was specified. Setting default sampling duration of 10 seconds.");
             duration = Duration.ofSeconds(10);
+        } else {
+            log.info("Setting sampling duration of {} seconds.", duration);
         }
         
         File rawOutputFile = new File(config.profilerRawOutputPath());
         if(rawOutputFile.createNewFile()) {
-            log.info("Created new file: {}", rawOutputFile.getAbsolutePath());
+            log.info("Created new file for raw asprof output: {}", rawOutputFile.getAbsolutePath());
         } else {
-            log.info("File probably already exists: {}", rawOutputFile.getAbsolutePath());
+            log.info("File for asprof output probably already exists: {}", rawOutputFile.getAbsolutePath());
         }
 
         Thread javaBenchmarkThread = getBenchmarkThread(config, duration);
@@ -76,6 +79,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
                 Thread.sleep(finalDuration.getSeconds() * 1000 + 1000);
                 javaBenchmarkThread.interrupt();
                 latch.countDown();
+                log.debug("Benchmark thread interrupted");
             } catch (InterruptedException e) {
                 log.warn("Benchmark process interrupted", e);
             }
@@ -155,6 +159,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     private Thread getBenchmarkThread(Config config, Duration duration) {
+        log.info("Sampling for {} seconds", duration.getSeconds());
         List<String> command = new ArrayList<>();
         command.add("java");
         command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",file=" + config.profilerRawOutputPath());
@@ -180,6 +185,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     private static List<StackTraceData> parseProfile(InputStream asyncProfilerOutput) throws IOException {
+        log.info("Parsing async-profiler output");
         List<StackTraceData> samples = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(asyncProfilerOutput))) {
             String line;
@@ -220,6 +226,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
     @Override
     public void write(String destinationFile) {
+        log.info("Writing sample blocks to {}", destinationFile);
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             ObjectWriter writer = objectMapper.writer(new DefaultPrettyPrinter());

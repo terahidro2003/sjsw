@@ -12,6 +12,7 @@ public class CommandStarter {
 
     private static Process getProcess(String... command) {
         try {
+            log.info("Starting command: {}", String.join(" ", command));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.redirectErrorStream(true); // Combine stdout and stderr
             processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
@@ -28,6 +29,7 @@ public class CommandStarter {
             }
 
             if (exitCode != 0) {
+                log.error("Process exited with code {}", exitCode);
                 throw new RuntimeException("Error occurred during benchmark execution");
             }
 
