@@ -7,6 +7,8 @@ import com.juoska.utils.CommandStarter;
 import groovy.util.logging.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Duration;
@@ -19,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 class AsyncProfilerExecutorIntegrationTest {
 
+    private static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutorIntegrationTest.class);
     final File benchmarkTargetDir = new File("src/test/resources/TestBenchmark/target");
     final File benchmarkProjectDir = new File("src/test/resources/TestBenchmark");
 
@@ -31,7 +34,7 @@ class AsyncProfilerExecutorIntegrationTest {
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/classes",
                 "com.juoska.benchmark.TestBenchmark",
-                "./executables/macos/lib/libasyncProfiler.dylib",
+                determineProfilerPathByOS(),
                 "./output.sampler-test" + System.currentTimeMillis()+".json",
                 "./asprof.sjsw.output.test.raw.json"
         );
@@ -60,7 +63,7 @@ class AsyncProfilerExecutorIntegrationTest {
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
                 "com.juoska.benchmark.TestBenchmark",
-                "./executables/macos/lib/libasyncProfiler.dylib",
+                determineProfilerPathByOS(),
                 "./output.sampler-test-jar" + System.currentTimeMillis()+".json",
                 "./asprof.sjsw.output.test.raw.json"
         );
@@ -75,6 +78,18 @@ class AsyncProfilerExecutorIntegrationTest {
         Set<String> methodNames = Set.of("com.juoska.benchmark.TestBenchmark.methodB",
                 "com.juoska.benchmark.TestBenchmark.methodA", "com.juoska.benchmark.TestBenchmark.main");
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
+    }
+
+    private String determineProfilerPathByOS() {
+        String os = System.getProperty("os.name");
+        if (os.toLowerCase().contains("windows")) {
+            log.error("SJSW does not support windows");
+        } else if(os.toLowerCase().contains("linux")) {
+            return "./executables/linux/lib/libasyncProfiler.so";
+        } else if(os.toLowerCase().contains("mac")) {
+            return "./executables/macos/lib/libasyncProfiler.dylib";
+        }
+        return "./executables/linux/lib/libasyncProfiler.so";
     }
 
     private Set<String> isTreeAssumedValid(StackTraceTreeNode root) {
