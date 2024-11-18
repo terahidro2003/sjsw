@@ -102,7 +102,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         toPeasDS(root, callTreeNode);
     }
 
-    public StackTraceTreeNode generateTree(List<StackTraceData> samples) {
+    private StackTraceTreeNode generateTree(List<StackTraceData> samples) {
         StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
         return stackTraceTreeBuilder.build(samples);
     }
@@ -222,9 +222,8 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     public void write(String destinationFile) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            String out = objectMapper.writeValueAsString(result);
             ObjectWriter writer = objectMapper.writer(new DefaultPrettyPrinter());
-            writer.writeValue(new File(destinationFile), out);
+            writer.writeValue(new File(destinationFile), result);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
