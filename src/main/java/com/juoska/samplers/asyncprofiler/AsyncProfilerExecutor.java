@@ -162,7 +162,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         log.info("Sampling for {} seconds", duration.getSeconds());
         List<String> command = new ArrayList<>();
         command.add("java");
-        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",file=" + config.profilerRawOutputPath());
+        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",event=cpu,clock=monotonic,file=" + config.profilerRawOutputPath());
         command.add("-Dfile.encoding=UTF-8");
         command.add("-cp");
         command.add(config.classPath());
