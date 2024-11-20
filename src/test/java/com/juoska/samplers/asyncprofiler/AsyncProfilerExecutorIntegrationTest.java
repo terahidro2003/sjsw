@@ -104,8 +104,8 @@ class AsyncProfilerExecutorIntegrationTest {
         Assertions.assertDoesNotThrow(() -> pipeline.write("destination.json"));
 
         // assert that tree at least includes benchmark method names
-        Set<String> methodNames = Set.of("com.juoska.benchmark.TestBenchmark.methodB",
-                "com.juoska.benchmark.TestBenchmark.methodA", "com.juoska.benchmark.TestBenchmark.main");
+        Set<String> methodNames = Set.of("9 methodB((Ljava/util/List;Ljava/util/stream/DoubleStream;)V)",
+                "9 methodA((Ljava/util/List;)V)", "9 main(([Ljava/lang/String;)V)");
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
     }
 
