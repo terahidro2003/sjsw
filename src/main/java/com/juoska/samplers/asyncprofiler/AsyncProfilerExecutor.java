@@ -21,16 +21,37 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
-    private static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutor.class);
+    public static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutor.class);
     private static List<StackTraceData> result;
 
     private volatile boolean benchmarkException = false;
 
     private StackTraceTreeNode root;
+
+    private Duration chooseDuration(Duration duration) {
+        if(duration == null || duration.getSeconds() <= 0) {
+            log.warn("No duration was specified. Setting default sampling duration of 10 seconds.");
+            duration = Duration.ofSeconds(10);
+        } else {
+            log.info("Setting sampling duration of {} seconds.", duration);
+        }
+        return duration;
+    }
+
+    private File rawProfilerOutput(Config config) throws IOException {
+        File rawOutputFile = new File(config.profilerRawOutputPath());
+        if(rawOutputFile.createNewFile()) {
+            log.info("Created new file for raw asprof output: {}", rawOutputFile.getAbsolutePath());
+        } else {
+            log.info("File for asprof output probably already exists: {}", rawOutputFile.getAbsolutePath());
+        }
+        return rawOutputFile;
+    }
 
     @Override
     public void execute(long pid, Config config, Duration duration) throws InterruptedException, IOException {
@@ -158,11 +179,17 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         peasNode.createStatistics("00000");
     }
 
-    private Thread getBenchmarkThread(Config config, Duration duration) {
+    private Thread getBenchmarkThread(Config config, Duration duration, Duration frequency) {
         log.info("Sampling for {} seconds", duration.getSeconds());
         List<String> command = new ArrayList<>();
         command.add("java");
-        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
+
+        if(frequency == null) {
+            command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
+        } else {
+            command.add("-agentpath:"+ config.profilerPath()+"=start,interval=" + frequency.get(TimeUnit.MILLISECONDS.toChronoUnit()) + "timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
+        }
+
         command.add("-Dfile.encoding=UTF-8");
 
         if(config.classPath().contains(".jar")) {
