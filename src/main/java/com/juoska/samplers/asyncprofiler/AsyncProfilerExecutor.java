@@ -223,9 +223,9 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         command.add("java");
 
         if(frequency == null) {
-            command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
+            command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",interval=10ms,event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
         } else {
-            command.add("-agentpath:"+ config.profilerPath()+"=start,interval=" + frequency.get(TimeUnit.MILLISECONDS.toChronoUnit()) + "timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
+            command.add("-agentpath:"+ config.profilerPath()+"=start,interval=" + frequency.get(TimeUnit.MILLISECONDS.toChronoUnit()) + "ms,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
         }
 
         command.add("-Dfile.encoding=UTF-8");
