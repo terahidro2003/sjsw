@@ -11,6 +11,8 @@ public interface SamplerExecutorPipeline {
 
     void execute(Config config, Duration samplingDuration) throws InterruptedException, IOException;
 
+    void execute(Config config ,Duration samplingDuration, Duration frequency) throws InterruptedException, IOException;
+
     void write(String destinationFile);
 
     StackTraceTreeNode getStackTraceTree();
