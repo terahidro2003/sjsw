@@ -4,11 +4,14 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.juoska.config.Config;
+import com.juoska.result.SamplerResultsProcessor;
 import com.juoska.result.StackTraceData;
 import com.juoska.result.StackTraceTreeBuilder;
 import com.juoska.result.StackTraceTreeNode;
 import com.juoska.samplers.SamplerExecutorPipeline;
+import com.juoska.samplers.jfr.ExecutionSample;
 import com.juoska.utils.CommandStarter;
+import com.juoska.utils.FileUtils;
 import de.dagere.peass.config.MeasurementConfig;
 import de.dagere.peass.measurement.rca.data.CallTreeNode;
 import groovy.util.logging.Slf4j;
@@ -21,16 +24,37 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
-    private static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutor.class);
+    public static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutor.class);
     private static List<StackTraceData> result;
 
     private volatile boolean benchmarkException = false;
 
     private StackTraceTreeNode root;
+
+    private Duration chooseDuration(Duration duration) {
+        if(duration == null || duration.getSeconds() <= 0) {
+            log.warn("No duration was specified. Setting default sampling duration of 10 seconds.");
+            duration = Duration.ofSeconds(10);
+        } else {
+            log.info("Setting sampling duration of {} seconds.", duration);
+        }
+        return duration;
+    }
+
+    private File rawProfilerOutput(Config config) throws IOException {
+        File rawOutputFile = new File(config.profilerRawOutputPath());
+        if(rawOutputFile.createNewFile()) {
+            log.info("Created new file for raw asprof output: {}", rawOutputFile.getAbsolutePath());
+        } else {
+            log.info("File for asprof output probably already exists: {}", rawOutputFile.getAbsolutePath());
+        }
+        return rawOutputFile;
+    }
 
     @Override
     public void execute(long pid, Config config, Duration duration) throws InterruptedException, IOException {
@@ -55,29 +79,64 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     @Override
     public void execute(Config config, Duration duration) throws InterruptedException, IOException {
         log.info("Executing async-profiler sampler with the following configuration: classPath: {}, mainClass: {}, profilerPath: {}, tempFilePath: {}, profilerRawOutputPath: {}", config.classPath(), config.mainClass(), config.profilerPath(), config.outputPath(), config.profilerRawOutputPath());
-        if(duration == null || duration.getSeconds() <= 0) {
-            log.warn("No duration was specified. Setting default sampling duration of 10 seconds.");
-            duration = Duration.ofSeconds(10);
+        duration = chooseDuration(duration);
+
+        Thread javaBenchmarkThread = getBenchmarkThread(config, duration, null);
+        execute(javaBenchmarkThread, config, duration);
+
+        File output = rawProfilerOutput(config);
+        InputStream input = new FileInputStream(output);
+        var samples = parseProfile(input);
+
+        if(config.profilerRawOutputPath().contains("jfr")) {
+            // retrieve samples from JFR file
+            List<String> command = new ArrayList<>();
+            command.add("jfr");
+            command.add("print");
+            command.add("--json");
+            command.add("--categories");
+            command.add("JVM");
+            command.add("--events");
+            command.add("Profiling");
+            command.add(config.profilerRawOutputPath());
+
+            ProcessBuilder processBuilder = new ProcessBuilder(command);
+            Process process = processBuilder.start();
+            InputStream processInputStream = process.getInputStream();
+            String jfr_json = "./jfr_asprof_samples" + System.currentTimeMillis() + ".json";
+            FileUtils.inputStreamToFile(processInputStream, jfr_json);
+
+            SamplerResultsProcessor samplerResultsProcessor = new SamplerResultsProcessor();
+            List<ExecutionSample> jfrSamples = samplerResultsProcessor.readJfrFile(new File(jfr_json));
+            StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
+            var tree = stackTraceTreeBuilder.buildFromExecutionSamples(jfrSamples);
+            root = tree;
+            tree.printTree();
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                log.error("Failed to execute async profiler. Async profiler returned exit code 0");
+            }
+
         } else {
-            log.info("Setting sampling duration of {} seconds.", duration);
-        }
-        
-        File rawOutputFile = new File(config.profilerRawOutputPath());
-        if(rawOutputFile.createNewFile()) {
-            log.info("Created new file for raw asprof output: {}", rawOutputFile.getAbsolutePath());
-        } else {
-            log.info("File for asprof output probably already exists: {}", rawOutputFile.getAbsolutePath());
+            // build my tree
+            var tree = generateTree(samples);
+            root = tree;
+            tree.printTree();
         }
 
-        Thread javaBenchmarkThread = getBenchmarkThread(config, duration);
+        CallTreeNode callTreeNode = null;
+        toPeasDS(root, callTreeNode);
+    }
 
+    private void execute(Thread workload, Config config, Duration duration) throws InterruptedException, IOException {
         CountDownLatch latch = new CountDownLatch(1);
 
-        Duration finalDuration = duration;
+        final Duration finalDuration = duration;
         Thread waitingThread = new Thread(() -> {
             try {
                 Thread.sleep(finalDuration.getSeconds() * 1000 + 1000);
-                javaBenchmarkThread.interrupt();
+                workload.interrupt();
                 latch.countDown();
                 log.debug("Benchmark thread interrupted");
             } catch (InterruptedException e) {
@@ -85,26 +144,26 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
             }
         });
 
-        javaBenchmarkThread.start();
+        workload.start();
         waitingThread.start();
-        latch.await();
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            log.warn("Benchmark thread interrupted", e);
+        }
+
 
         if(benchmarkException) {
             throw new RuntimeException("Benchmark exception");
         }
-
-        File output = new File(config.profilerRawOutputPath());
-        InputStream input = new FileInputStream(output);
-        var samples = parseProfile(input);
-
-        // build my tree
-        var tree = generateTree(samples);
-        root = tree;
-        tree.printTree();
-
-        CallTreeNode callTreeNode = null;
-        toPeasDS(root, callTreeNode);
     }
+
+    @Override
+    public void execute(Config config, Duration samplingDuration, Duration frequency) throws InterruptedException, IOException {
+
+    }
+
 
     private StackTraceTreeNode generateTree(List<StackTraceData> samples) {
         StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
@@ -158,11 +217,17 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         peasNode.createStatistics("00000");
     }
 
-    private Thread getBenchmarkThread(Config config, Duration duration) {
+    private Thread getBenchmarkThread(Config config, Duration duration, Duration frequency) {
         log.info("Sampling for {} seconds", duration.getSeconds());
         List<String> command = new ArrayList<>();
         command.add("java");
-        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
+
+        if(frequency == null) {
+            command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",interval=10ms,event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
+        } else {
+            command.add("-agentpath:"+ config.profilerPath()+"=start,interval=" + frequency.get(TimeUnit.MILLISECONDS.toChronoUnit()) + "ms,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
+        }
+
         command.add("-Dfile.encoding=UTF-8");
 
         if(config.classPath().contains(".jar")) {

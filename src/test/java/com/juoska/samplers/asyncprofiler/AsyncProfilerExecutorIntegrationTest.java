@@ -80,6 +80,35 @@ class AsyncProfilerExecutorIntegrationTest {
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
     }
 
+    @Test
+    public void testJfrAsTheOutput() {
+        // run mvn install on benchmark application
+        CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+
+        // compile JAR file for TestBenchmark
+        CommandStarter.start("mvn", "clean", "package", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+
+        // config
+        Config config = new Config(
+                benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
+                "com.juoska.benchmark.TestBenchmark",
+                determineProfilerPathByOS(),
+                "./output.sampler-test-jar" + System.currentTimeMillis()+".json",
+                "./asprof.sjsw.output.test.raw" + System.currentTimeMillis() + ".jfr"
+        );
+        Duration duration = Duration.ofSeconds(60);
+        SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
+
+        // run (and assert whether both phases throw an exception)
+        Assertions.assertDoesNotThrow(() -> pipeline.execute(config, duration));
+        Assertions.assertDoesNotThrow(() -> pipeline.write("destination.json"));
+
+        // assert that tree at least includes benchmark method names
+        Set<String> methodNames = Set.of("9 methodB((Ljava/util/List;Ljava/util/stream/DoubleStream;)V)",
+                "9 methodA((Ljava/util/List;)V)", "9 main(([Ljava/lang/String;)V)");
+        assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
+    }
+
     private String determineProfilerPathByOS() {
         String os = System.getProperty("os.name");
         if (os.toLowerCase().contains("windows")) {

@@ -62,8 +62,7 @@ public class StackTraceTreeNode {
     private void printTreeRecursive(StackTraceTreeNode node, String prefix, boolean isLast) {
         if (node.getMethodName() != null) {
             System.out.println(prefix + (isLast ? "└────── " : "├────── ") + node.getMethodName() +
-                    " [Time: " + node.getTimeTaken() + "ms, " +
-                    "Percent: " + node.getPercentageOfTotalTimeTaken() + "%, " +
+                    " [Estimated Time: " + node.getTimeTaken() + "ms, " +
                     "Samples: " + node.getTotalNumberOfSamples() + "]");
         }
 
