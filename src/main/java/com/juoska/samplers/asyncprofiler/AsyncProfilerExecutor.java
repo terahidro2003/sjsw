@@ -54,16 +54,19 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
     @Override
     public void execute(Config config, Duration duration) throws InterruptedException, IOException {
-
+        log.info("Executing async-profiler sampler with the following configuration: classPath: {}, mainClass: {}, profilerPath: {}, tempFilePath: {}, profilerRawOutputPath: {}", config.classPath(), config.mainClass(), config.profilerPath(), config.outputPath(), config.profilerRawOutputPath());
         if(duration == null || duration.getSeconds() <= 0) {
+            log.warn("No duration was specified. Setting default sampling duration of 10 seconds.");
             duration = Duration.ofSeconds(10);
+        } else {
+            log.info("Setting sampling duration of {} seconds.", duration);
         }
         
         File rawOutputFile = new File(config.profilerRawOutputPath());
         if(rawOutputFile.createNewFile()) {
-            log.info("Created new file: {}", rawOutputFile.getAbsolutePath());
+            log.info("Created new file for raw asprof output: {}", rawOutputFile.getAbsolutePath());
         } else {
-            log.info("File probably already exists: {}", rawOutputFile.getAbsolutePath());
+            log.info("File for asprof output probably already exists: {}", rawOutputFile.getAbsolutePath());
         }
 
         Thread javaBenchmarkThread = getBenchmarkThread(config, duration);
@@ -76,6 +79,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
                 Thread.sleep(finalDuration.getSeconds() * 1000 + 1000);
                 javaBenchmarkThread.interrupt();
                 latch.countDown();
+                log.debug("Benchmark thread interrupted");
             } catch (InterruptedException e) {
                 log.warn("Benchmark process interrupted", e);
             }
@@ -97,21 +101,33 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         var tree = generateTree(samples);
         root = tree;
         tree.printTree();
+
+        CallTreeNode callTreeNode = null;
+        toPeasDS(root, callTreeNode);
     }
 
-    public StackTraceTreeNode generateTree(List<StackTraceData> samples) {
+    private StackTraceTreeNode generateTree(List<StackTraceData> samples) {
         StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
         return stackTraceTreeBuilder.build(samples);
     }
 
     private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode) {
-        MeasurementConfig measurementConfig = new MeasurementConfig(1);
+        MeasurementConfig measurementConfig = new MeasurementConfig(1, "00000", "00000");
 
         if(peasNode == null) {
-            peasNode = new CallTreeNode(node.getMethodName(), "", "", measurementConfig);
+            String methodNameWithNew = node.getMethodName() + "()";
+            if(node.getMethodName().contains("<init>")) {
+                methodNameWithNew = "new " + node.getMethodName() + "()";
+            }
+            peasNode = new CallTreeNode(node.getMethodName(),
+                    methodNameWithNew,
+                    methodNameWithNew,
+                    measurementConfig);
+
+            createPeassNode(node, peasNode);
         } else {
-            peasNode.appendChild(node.getMethodName(), "", "");
-            peasNode.addMeasurement("00000", node.getTimeTaken());
+            createPeassNode(node, peasNode);
+            peasNode = peasNode.getChildByKiekerPattern(node.getMethodName() + "()");
         }
 
         List<StackTraceTreeNode> children = node.getChildren();
@@ -120,12 +136,40 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         }
     }
 
+    private void createPeassNode(StackTraceTreeNode node, CallTreeNode peasNode) {
+        peasNode.initCommitData();
+        peasNode.initVMData("00000");
+        peasNode.addMeasurement("00000", node.getTimeTaken());
+
+        // check is done as a workaround for Peass kieker pattern check
+        if(node.getMethodName().contains("<init>")) {
+            String methodNameWithNew = "new " + node.getMethodName() + "()";
+            peasNode.appendChild(node.getMethodName(),
+                    methodNameWithNew,
+                    methodNameWithNew
+            );
+        } else {
+            peasNode.appendChild(node.getMethodName(),
+                    node.getMethodName() + "()",
+                    node.getMethodName() + "()"
+            );
+        }
+
+        peasNode.createStatistics("00000");
+    }
+
     private Thread getBenchmarkThread(Config config, Duration duration) {
+        log.info("Sampling for {} seconds", duration.getSeconds());
         List<String> command = new ArrayList<>();
         command.add("java");
-        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",file=" + config.profilerRawOutputPath());
+        command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
         command.add("-Dfile.encoding=UTF-8");
-        command.add("-cp");
+
+        if(config.classPath().contains(".jar")) {
+            command.add("-jar");
+        } else {
+            command.add("-cp");
+        }
         command.add(config.classPath());
 
         if(config.mainClass().contains(" ")) {
@@ -146,6 +190,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     private static List<StackTraceData> parseProfile(InputStream asyncProfilerOutput) throws IOException {
+        log.info("Parsing async-profiler output");
         List<StackTraceData> samples = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(asyncProfilerOutput))) {
             String line;
@@ -186,11 +231,11 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
     @Override
     public void write(String destinationFile) {
+        log.info("Writing sample blocks to {}", destinationFile);
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            String out = objectMapper.writeValueAsString(result);
             ObjectWriter writer = objectMapper.writer(new DefaultPrettyPrinter());
-            writer.writeValue(new File(destinationFile), out);
+            writer.writeValue(new File(destinationFile), result);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
