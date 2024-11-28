@@ -14,15 +14,18 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
 
       - name: Configure perf
         run: sudo sysctl kernel.perf_event_paranoid=1
 
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
+        run: mvn -B verify --file pom.xml
 
-      - name: Publish to GitHub Packages Apache Maven
-        run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
+      - name: Publish package
+        run: mvn --batch-mode deploy
         env:
-            GITHUB_TOKEN: ${{ github.token }}
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
