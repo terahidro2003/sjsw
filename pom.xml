@@ -4,14 +4,52 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.juoska</groupId>
-    <artifactId>StandaloneSampler</artifactId>
+    <groupId>io.github.terahidro2003</groupId>
+    <artifactId>sfsw</artifactId>
     <version>0.1-SNAPSHOT</version>
+
+    <packaging>jar</packaging>
+
+    <name>Simple Java Sampling Wrapper</name>
+    <description>Simple Java Sampling Wrapper (SJSW) - async-profiler output to Peass output converter and call stack trace tree builder</description>
+    <url>https://github.com/terahidro2003/sjsw</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Juozas Skarbalius</name>
+            <email>j.skarbalius@lancaster.ac.uk</email>
+            <url>https://github.com/terahidro2003</url>
+            <organization>io.github.terahidro2003</organization>
+            <organizationUrl>https://github.com/terahidro2003</organizationUrl>
+        </developer>
+    </developers>
+
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/terahidro2003/sjsw/issues</url>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:git@github.com:terahidro2003/sjsw.git</connection>
+        <developerConnection>scm:git@github.com:terahidro2003/sjsw.git</developerConnection>
+        <url>git@github.com:terahidro2003/sjsw.git</url>
+    </scm>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <sonar.organization>io.github.terahidro2003</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.projectKey>sjsw</sonar.projectKey>
     </properties>
 
     <dependencies>
@@ -52,6 +90,7 @@
             <version>0.4.0</version>
         </dependency>
     </dependencies>
+
 
     <build>
         <plugins>
@@ -113,9 +152,9 @@
 
     <distributionManagement>
         <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/terahidro2003/sjsw</url>
+            <id>ossrh</id>
+            <name>Central Repository OSSRH</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
 
