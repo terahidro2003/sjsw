@@ -95,7 +95,7 @@ public class StackTraceTreeBuilder {
         }
 
         // get measurement properties
-        var methodNames = sample.getMethodSignatures();
+        var methodNames =  sample.getMethodSignatures();
         var timeTaken = 100;
         var amountOfSamples = 1;
         var percentageOfSamples = 0;
