@@ -1,6 +1,6 @@
 {
-  "classPath": "/mnt/f/Projects/lancaster/StandaloneSampler/target/classes",
-  "mainClass": "com.juoska.benchmark.CryptoBench",
+  "classPath": "/mnt/f/Projects/lancaster/precision-experiments-rca/example-project/cp.txt",
+  "mainClass": "org.junit.runner.JUnitCore de.dagere.peass.MainTest",
   "profilerPath": "./executables/linux/lib/libasyncProfiler.so",
   "outputPath": "/home/hellstone/output.sampler.json",
   "profilerRawOutputPath": "/home/hellstone/asprof.sjsw.output.raw.json"

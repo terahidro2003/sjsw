@@ -80,10 +80,10 @@ public class ExecutionSample {
                             if(eventMap.containsKey("sampledThread")) {
                                 if(eventMap.get("sampledThread") instanceof Map) {
                                     var threadMap = (Map<String, Map>) eventMap.get("sampledThread"); // fails here
-                                    var threadName = (threadMap != null && threadMap.get("sampledThread") != null)
-                                            ? threadMap.get("sampledThread").get("osName") : null;
+                                    String threadName = (threadMap != null && threadMap.get("sampledThread") != null)
+                                            ? (String) threadMap.get("sampledThread").get("osName") : null;
                                     if(threadName != null) {
-                                        sample.setSampledThread(threadMap.get("sampledThread").get("osName").toString());
+                                        sample.setSampledThread(threadName);
                                     } else {
                                         log.debug("Couldn't find sampled thread name in JFR recording sample");
                                         sample.setSampledThread("[NOT FOUND]");
