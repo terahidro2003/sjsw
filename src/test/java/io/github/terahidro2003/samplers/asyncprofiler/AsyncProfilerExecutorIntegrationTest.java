@@ -35,8 +35,8 @@ class AsyncProfilerExecutorIntegrationTest {
                 benchmarkTargetDir.getAbsolutePath() + "/classes",
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
-                "./output.sampler-test" + System.currentTimeMillis()+".json",
-                "./asprof.sjsw.output.test.raw.json"
+                "./output.sampler-test" + System.currentTimeMillis(),
+                false
         );
         Duration duration = Duration.ofSeconds(10);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
@@ -64,8 +64,8 @@ class AsyncProfilerExecutorIntegrationTest {
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
-                "./output.sampler-test-jar" + System.currentTimeMillis()+".json",
-                "./asprof.sjsw.output.test.raw.json"
+                "./output.sampler-test-jar" + System.currentTimeMillis(),
+                false
         );
         Duration duration = Duration.ofSeconds(10);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
@@ -94,7 +94,7 @@ class AsyncProfilerExecutorIntegrationTest {
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
                 "./output.sampler-test-jar" + System.currentTimeMillis()+".json",
-                "./asprof.sjsw.output.test.raw" + System.currentTimeMillis() + ".jfr"
+                true
         );
         Duration duration = Duration.ofSeconds(60);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();

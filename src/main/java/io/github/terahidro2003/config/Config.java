@@ -16,7 +16,7 @@ import java.nio.file.Files;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
 @Slf4j
-public record Config(String classPath, String mainClass, String profilerPath, String outputPath, String profilerRawOutputPath) implements Serializable {
+public record Config(String classPath, String mainClass, String profilerPath, String outputPath, Boolean fullSamples) implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -51,7 +51,7 @@ public record Config(String classPath, String mainClass, String profilerPath, St
         if(!config.classPath.contains(".jar") && config.classPath.contains(".txt")) {
             try {
                 String classPath = FileUtils.readFileToString(config.classPath);
-                return new Config(classPath, config.mainClass, config.profilerPath, config.outputPath, config.profilerRawOutputPath);
+                return new Config(classPath, config.mainClass, config.profilerPath, config.outputPath, config.fullSamples);
             } catch (IOException e) {
                 return config;
             }
