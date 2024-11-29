@@ -6,7 +6,7 @@
 
     <groupId>io.github.terahidro2003</groupId>
     <artifactId>sfsw</artifactId>
-    <version>0.1.1</version>
+    <version>0.2.0</version>
 
     <packaging>jar</packaging>
 
@@ -161,7 +161,7 @@
                     <configuration>
                         <transformers>
                             <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                <mainClass>com.juoska.StandaloneSampler</mainClass>
+                                <mainClass>io.github.terahidro2003.StandaloneSampler</mainClass>
                             </transformer>
                         </transformers>
                     </configuration>

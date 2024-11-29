@@ -1,4 +1,4 @@
-package com.juoska.samplers.jfr;
+package io.github.terahidro2003.samplers.jfr;
 
 public class Method {
     private String classLoader;

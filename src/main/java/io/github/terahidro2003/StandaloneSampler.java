@@ -1,8 +1,8 @@
-package com.juoska;
+package io.github.terahidro2003;
 
-import com.juoska.config.Config;
-import com.juoska.samplers.SamplerExecutorPipeline;
-import com.juoska.samplers.asyncprofiler.AsyncProfilerExecutor;
+import io.github.terahidro2003.config.Config;
+import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
+import io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

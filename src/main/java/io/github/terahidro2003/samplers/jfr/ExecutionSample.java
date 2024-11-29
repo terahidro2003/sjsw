@@ -1,8 +1,8 @@
-package com.juoska.samplers.jfr;
+package io.github.terahidro2003.samplers.jfr;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.juoska.config.Constants;
+import io.github.terahidro2003.config.Constants;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.juoska.samplers.asyncprofiler.AsyncProfilerExecutor.log;
+import static io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerExecutor.log;
 
 public class ExecutionSample {
     private String timestamp;

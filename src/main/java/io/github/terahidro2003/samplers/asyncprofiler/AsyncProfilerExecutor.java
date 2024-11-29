@@ -1,17 +1,17 @@
-package com.juoska.samplers.asyncprofiler;
+package io.github.terahidro2003.samplers.asyncprofiler;
 
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.juoska.config.Config;
-import com.juoska.result.SamplerResultsProcessor;
-import com.juoska.result.StackTraceData;
-import com.juoska.result.StackTraceTreeBuilder;
-import com.juoska.result.StackTraceTreeNode;
-import com.juoska.samplers.SamplerExecutorPipeline;
-import com.juoska.samplers.jfr.ExecutionSample;
-import com.juoska.utils.CommandStarter;
-import com.juoska.utils.FileUtils;
+import io.github.terahidro2003.config.Config;
+import io.github.terahidro2003.result.SamplerResultsProcessor;
+import io.github.terahidro2003.result.StackTraceData;
+import io.github.terahidro2003.result.StackTraceTreeBuilder;
+import io.github.terahidro2003.result.StackTraceTreeNode;
+import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
+import io.github.terahidro2003.samplers.jfr.ExecutionSample;
+import io.github.terahidro2003.utils.CommandStarter;
+import io.github.terahidro2003.utils.FileUtils;
 import de.dagere.peass.config.MeasurementConfig;
 import de.dagere.peass.measurement.rca.data.CallTreeNode;
 import groovy.util.logging.Slf4j;

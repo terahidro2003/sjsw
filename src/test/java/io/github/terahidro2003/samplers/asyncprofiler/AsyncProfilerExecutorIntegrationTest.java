@@ -1,9 +1,9 @@
-package com.juoska.samplers.asyncprofiler;
+package io.github.terahidro2003.samplers.asyncprofiler;
 
-import com.juoska.config.Config;
-import com.juoska.result.StackTraceTreeNode;
-import com.juoska.samplers.SamplerExecutorPipeline;
-import com.juoska.utils.CommandStarter;
+import io.github.terahidro2003.config.Config;
+import io.github.terahidro2003.result.StackTraceTreeNode;
+import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
+import io.github.terahidro2003.utils.CommandStarter;
 import groovy.util.logging.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

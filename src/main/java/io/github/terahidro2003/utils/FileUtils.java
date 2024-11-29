@@ -1,4 +1,4 @@
-package com.juoska.utils;
+package io.github.terahidro2003.utils;
 
 import org.apache.commons.io.IOUtils;
 

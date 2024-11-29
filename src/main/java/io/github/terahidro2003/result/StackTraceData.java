@@ -1,4 +1,4 @@
-package com.juoska.result;
+package io.github.terahidro2003.result;
 
 import java.io.Serializable;
 import java.util.List;

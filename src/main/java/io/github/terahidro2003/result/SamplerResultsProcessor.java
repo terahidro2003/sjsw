@@ -1,6 +1,6 @@
-package com.juoska.result;
+package io.github.terahidro2003.result;
 
-import com.juoska.samplers.jfr.ExecutionSample;
+import io.github.terahidro2003.samplers.jfr.ExecutionSample;
 
 import java.io.File;
 import java.io.IOException;

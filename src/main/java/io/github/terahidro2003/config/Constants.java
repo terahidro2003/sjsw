@@ -1,4 +1,4 @@
-package com.juoska.config;
+package io.github.terahidro2003.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

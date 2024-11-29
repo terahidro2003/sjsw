@@ -1,9 +1,9 @@
-package com.juoska.config;
+package io.github.terahidro2003.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.juoska.utils.FileUtils;
+import io.github.terahidro2003.utils.FileUtils;
 import groovy.util.logging.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

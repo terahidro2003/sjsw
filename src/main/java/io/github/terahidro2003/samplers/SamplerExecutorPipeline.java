@@ -1,7 +1,7 @@
-package com.juoska.samplers;
+package io.github.terahidro2003.samplers;
 
-import com.juoska.config.Config;
-import com.juoska.result.StackTraceTreeNode;
+import io.github.terahidro2003.config.Config;
+import io.github.terahidro2003.result.StackTraceTreeNode;
 
 import java.io.IOException;
 import java.time.Duration;
