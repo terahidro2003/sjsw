@@ -47,24 +47,14 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         return duration;
     }
 
-    private File rawProfilerOutput(Config config, String name) throws IOException {
-        File rawOutputFile = new File(Path.of(config.outputPath(), name).toAbsolutePath().toString());
-        if(rawOutputFile.createNewFile()) {
-            log.info("Created new file for raw asprof output: {}", rawOutputFile.getAbsolutePath());
-        } else {
-            log.info("File for asprof output probably already exists: {}", rawOutputFile.getAbsolutePath());
-        }
-        return rawOutputFile;
-    }
-
     private void retrieveAsyncProfiler(Config config) throws IOException {
         if (config.profilerPath().isEmpty()) {
-            File folder = new File(config.outputPath() + "/measurements");
+            File folder = new File(config.outputPath() + "/executables");
             if(!folder.exists()) {
                 folder.mkdirs();
             }
-            String profilerPath = FileUtils.retrieveAsyncProfilerExecutable(Path.of(config.outputPath()).resolve("/measurements"));
-            config = new Config(config.classPath(), config.mainClass(), profilerPath, config.outputPath(), config.fullSamples());
+            String profilerPath = FileUtils.retrieveAsyncProfilerExecutable(Path.of(config.outputPath()).resolve("/executables"));
+            config = new Config(config.classPath(), config.mainClass(), profilerPath, config.outputPath(), config.fullSamples(), config.frequency());
         }
     }
 
@@ -115,12 +105,8 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         log.info("Executing async-profiler sampler with the following configuration: classPath: {}, mainClass: {}, profilerPath: {}, outputPath: {}", config.classPath(), config.mainClass(), config.profilerPath(), config.outputPath());
         duration = chooseDuration(duration);
 
-        File output = rawProfilerOutput(config, "asprof_results_" + System.currentTimeMillis() + ".json");
-        if(config.fullSamples()) {
-            output = rawProfilerOutput(config, "asprof_results_" + System.currentTimeMillis() + ".jfr");
-        }
-
-        Thread javaBenchmarkThread = getBenchmarkThread(config, duration, null, output.getAbsolutePath());
+        File output = AsyncProfilerHelper.getInstance(config).retrieveRawOutputFile();
+        Thread javaBenchmarkThread = getBenchmarkThread(config, duration, output);
         execute(javaBenchmarkThread, config, duration);
 
         InputStream input = new FileInputStream(output);
@@ -141,7 +127,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Process process = processBuilder.start();
             InputStream processInputStream = process.getInputStream();
-            String jfr_json = rawProfilerOutput(config, "jfr_samples" + System.currentTimeMillis() + ".json").getAbsolutePath();
+            String jfr_json = AsyncProfilerHelper.getInstance(config).rawProfilerOutput("parsed_jfr_samples" + System.currentTimeMillis() + ".json").getAbsolutePath();
             FileUtils.inputStreamToFile(processInputStream, jfr_json);
 
             SamplerResultsProcessor samplerResultsProcessor = new SamplerResultsProcessor();
@@ -255,17 +241,11 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         peasNode.createStatistics(commit);
     }
 
-    private Thread getBenchmarkThread(Config config, Duration duration, Duration frequency, String output) {
+    private Thread getBenchmarkThread(Config config, Duration duration, File output) {
         log.info("Sampling for {} seconds", duration.getSeconds());
         List<String> command = new ArrayList<>();
         command.add("java");
-
-        if(frequency == null) {
-            command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",interval=10ms,event=wall,clock=monotonic,file=" + output);
-        } else {
-            command.add("-agentpath:"+ config.profilerPath()+"=start,interval=" + frequency.get(TimeUnit.MILLISECONDS.toChronoUnit()) + "ms,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + output);
-        }
-
+        command.add(AsyncProfilerHelper.getInstance(config, output).retrieveJavaAgent(duration));
         command.add("-Dfile.encoding=UTF-8");
 
         if(config.classPath().contains(".jar")) {
