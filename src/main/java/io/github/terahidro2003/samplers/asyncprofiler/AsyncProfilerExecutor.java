@@ -47,21 +47,23 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         return duration;
     }
 
-    private void retrieveAsyncProfiler(Config config) throws IOException {
+    private Config retrieveAsyncProfiler(Config config) throws IOException {
         if (config.profilerPath().isEmpty()) {
             File folder = new File(config.outputPath() + "/executables");
             if(!folder.exists()) {
                 folder.mkdirs();
             }
-            String profilerPath = FileUtils.retrieveAsyncProfilerExecutable(Path.of(config.outputPath()).resolve("/executables"));
-            config = new Config(config.classPath(), config.mainClass(), profilerPath, config.outputPath(), config.fullSamples(), config.frequency());
+            String profilerPath = FileUtils.retrieveAsyncProfilerExecutable(folder.toPath());
+            log.warn("Downloaded profiler path: {}", profilerPath);
+            return new Config(config.classPath(), config.mainClass(), profilerPath, config.outputPath(), config.fullSamples(), config.frequency());
         }
+        return config;
     }
 
     @Override
     public void execute(long pid, Config config, Duration duration) throws InterruptedException, IOException {
         configureResultsFolder(config);
-        retrieveAsyncProfiler(config);
+        config = retrieveAsyncProfiler(config);
         // TODO: allow custom frequency in hz specified in config
         String[] command = {config.profilerPath(), "-d", String.valueOf(duration.getSeconds()), String.valueOf(pid)};
 
@@ -101,7 +103,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     @Override
     public void execute(Config config, Duration duration, String commit, String oldCommit) throws InterruptedException, IOException {
         configureResultsFolder(config);
-        retrieveAsyncProfiler(config);
+        config = retrieveAsyncProfiler(config);
         log.info("Executing async-profiler sampler with the following configuration: classPath: {}, mainClass: {}, profilerPath: {}, outputPath: {}", config.classPath(), config.mainClass(), config.profilerPath(), config.outputPath());
         duration = chooseDuration(duration);
 
