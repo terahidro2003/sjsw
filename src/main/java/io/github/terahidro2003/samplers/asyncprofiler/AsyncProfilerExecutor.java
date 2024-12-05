@@ -48,7 +48,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     private Config retrieveAsyncProfiler(Config config) throws IOException {
-        if (config.profilerPath().isEmpty()) {
+        if (config.profilerPath() == null || config.profilerPath().isEmpty()) {
             File folder = new File(config.outputPath() + "/executables");
             if(!folder.exists()) {
                 folder.mkdirs();
