@@ -24,6 +24,7 @@ class AsyncProfilerExecutorIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutorIntegrationTest.class);
     final File benchmarkTargetDir = new File("src/test/resources/TestBenchmark/target");
     final File benchmarkProjectDir = new File("src/test/resources/TestBenchmark");
+    private static final String MEASUREMENTS_PATH = "./sjsw-test-measurements";
 
     @Test
     public void test() {
@@ -35,7 +36,7 @@ class AsyncProfilerExecutorIntegrationTest {
                 benchmarkTargetDir.getAbsolutePath() + "/classes",
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
-                "./output.sampler-test" + System.currentTimeMillis(),
+                MEASUREMENTS_PATH,
                 false
         );
         Duration duration = Duration.ofSeconds(10);
@@ -64,7 +65,7 @@ class AsyncProfilerExecutorIntegrationTest {
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
-                "./output.sampler-test-jar" + System.currentTimeMillis(),
+                MEASUREMENTS_PATH,
                 false
         );
         Duration duration = Duration.ofSeconds(10);
@@ -93,7 +94,7 @@ class AsyncProfilerExecutorIntegrationTest {
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
-                "./output.sampler-test-jar" + System.currentTimeMillis()+".json",
+                MEASUREMENTS_PATH,
                 true
         );
         Duration duration = Duration.ofSeconds(60);
