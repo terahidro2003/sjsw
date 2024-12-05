@@ -37,7 +37,8 @@ class AsyncProfilerExecutorIntegrationTest {
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
-                false
+                false,
+                0
         );
         Duration duration = Duration.ofSeconds(10);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
@@ -66,7 +67,8 @@ class AsyncProfilerExecutorIntegrationTest {
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
-                false
+                false,
+                0
         );
         Duration duration = Duration.ofSeconds(10);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
@@ -95,7 +97,8 @@ class AsyncProfilerExecutorIntegrationTest {
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
-                true
+                true,
+                0
         );
         Duration duration = Duration.ofSeconds(60);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
