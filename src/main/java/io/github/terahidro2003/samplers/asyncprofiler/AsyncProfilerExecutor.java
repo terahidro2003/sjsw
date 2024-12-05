@@ -61,6 +61,17 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     @Override
+    public String javaAgent(Config config, Duration samplingDuration) {
+        configureResultsFolder(config);
+        try {
+            config = retrieveAsyncProfiler(config);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return AsyncProfilerHelper.getInstance(config).retrieveJavaAgent(samplingDuration);
+    }
+
+    @Override
     public void execute(long pid, Config config, Duration duration) throws InterruptedException, IOException {
         configureResultsFolder(config);
         config = retrieveAsyncProfiler(config);
