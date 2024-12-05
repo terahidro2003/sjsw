@@ -140,6 +140,32 @@ class AsyncProfilerExecutorIntegrationTest {
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
     }
 
+    @Test
+    public void miniPeasIntegrationTest() {
+        // config
+        Config config = new Config(
+                null,
+                null,
+                null,
+                benchmarkProjectDir.getAbsolutePath() + "/profiler-results",
+                true,
+                0
+        );
+        Duration duration = Duration.ofSeconds(30);
+        SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
+        String agent = pipeline.javaAgent(config, duration);
+
+        CommandStarter.start("mvn",
+                "clean",
+                "test",
+                "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml",
+                "-DargLine=" + agent
+        );
+
+        System.out.println(agent);
+
+    }
+
     private String determineProfilerPathByOS() {
         String os = System.getProperty("os.name");
         if (os.toLowerCase().contains("windows")) {
