@@ -1,6 +1,6 @@
-package com.juoska.result;
+package io.github.terahidro2003.result;
 
-import com.juoska.samplers.jfr.ExecutionSample;
+import io.github.terahidro2003.samplers.jfr.ExecutionSample;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -96,7 +96,7 @@ public class StackTraceTreeBuilder {
 
         // get measurement properties
         var methodNames =  sample.getMethodSignatures();
-        var timeTaken = 100;
+        var timeTaken = 10;
         var amountOfSamples = 1;
         var percentageOfSamples = 0;
 

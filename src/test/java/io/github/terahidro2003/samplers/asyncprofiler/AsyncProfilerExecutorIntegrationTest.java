@@ -1,9 +1,10 @@
-package com.juoska.samplers.asyncprofiler;
+package io.github.terahidro2003.samplers.asyncprofiler;
 
-import com.juoska.config.Config;
-import com.juoska.result.StackTraceTreeNode;
-import com.juoska.samplers.SamplerExecutorPipeline;
-import com.juoska.utils.CommandStarter;
+import io.github.terahidro2003.config.Config;
+import io.github.terahidro2003.result.SamplerResultsProcessor;
+import io.github.terahidro2003.result.StackTraceTreeNode;
+import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
+import io.github.terahidro2003.utils.CommandStarter;
 import groovy.util.logging.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
@@ -24,19 +26,21 @@ class AsyncProfilerExecutorIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutorIntegrationTest.class);
     final File benchmarkTargetDir = new File("src/test/resources/TestBenchmark/target");
     final File benchmarkProjectDir = new File("src/test/resources/TestBenchmark");
+    private static final String MEASUREMENTS_PATH = "./sjsw-test-measurements";
 
     @Test
     public void test() {
         // run mvn install on benchmark application
-        CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+        CommandStarter.start("mvn", "clean", "install", "-DskipTests", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
 
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/classes",
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
-                "./output.sampler-test" + System.currentTimeMillis()+".json",
-                "./asprof.sjsw.output.test.raw.json"
+                MEASUREMENTS_PATH,
+                false,
+                0
         );
         Duration duration = Duration.ofSeconds(10);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
@@ -53,19 +57,17 @@ class AsyncProfilerExecutorIntegrationTest {
 
     @Test
     public void testWithJarFile() {
-        // run mvn install on benchmark application
-        CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
-
         // compile JAR file for TestBenchmark
-        CommandStarter.start("mvn", "clean", "package", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+        CommandStarter.start("mvn", "clean", "package", "-DskipTests" , "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
 
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
-                "./output.sampler-test-jar" + System.currentTimeMillis()+".json",
-                "./asprof.sjsw.output.test.raw.json"
+                MEASUREMENTS_PATH,
+                false,
+                0
         );
         Duration duration = Duration.ofSeconds(10);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
@@ -82,19 +84,17 @@ class AsyncProfilerExecutorIntegrationTest {
 
     @Test
     public void testJfrAsTheOutput() {
-        // run mvn install on benchmark application
-        CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
-
         // compile JAR file for TestBenchmark
-        CommandStarter.start("mvn", "clean", "package", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+        CommandStarter.start("mvn", "clean", "package", "-DskipTests", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
 
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
                 "com.juoska.benchmark.TestBenchmark",
                 determineProfilerPathByOS(),
-                "./output.sampler-test-jar" + System.currentTimeMillis()+".json",
-                "./asprof.sjsw.output.test.raw" + System.currentTimeMillis() + ".jfr"
+                MEASUREMENTS_PATH,
+                true,
+                0
         );
         Duration duration = Duration.ofSeconds(60);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
@@ -107,6 +107,74 @@ class AsyncProfilerExecutorIntegrationTest {
         Set<String> methodNames = Set.of("9 methodB((Ljava/util/List;Ljava/util/stream/DoubleStream;)V)",
                 "9 methodA((Ljava/util/List;)V)", "9 main(([Ljava/lang/String;)V)");
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
+    }
+
+    @Test
+    public void testWithoutSpecifiedProfilerPath() {
+        // compile JAR file for TestBenchmark
+        CommandStarter.start("mvn", "clean", "package", "-DskipTests", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+
+        // config
+        Config config = new Config(
+                benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
+                "com.juoska.benchmark.TestBenchmark",
+                "",
+                MEASUREMENTS_PATH,
+                true,
+                0
+        );
+        Duration duration = Duration.ofSeconds(30);
+        SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
+
+        // run (and assert whether both phases throw an exception)
+        Assertions.assertDoesNotThrow(() -> pipeline.execute(config, duration));
+        Assertions.assertDoesNotThrow(() -> pipeline.write("destination.json"));
+
+        // assert that tree at least includes benchmark method names
+        Set<String> methodNames = Set.of("9 methodB((Ljava/util/List;Ljava/util/stream/DoubleStream;)V)",
+                "9 methodA((Ljava/util/List;)V)", "9 main(([Ljava/lang/String;)V)");
+        assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
+    }
+
+    @Test
+    public void miniPeasIntegrationTest() throws IOException {
+        // STEP 1: create semi-empty configuration with output path and full samples (JFR) sampling enabled.
+        Config config = new Config(
+                null,
+                null,
+                null,
+                benchmarkProjectDir.getAbsolutePath() + "/profiler-results",
+                true,
+                0
+        );
+
+        // Step 2: Set sampling maximum duration
+        Duration duration = Duration.ofSeconds(60);
+
+        // Step 3: init the pipeline
+        SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
+
+        // Step 4: generate java asprof agent as string together with JFR file location
+        MeasurementInformation agent = pipeline.javaAgent(config, duration);
+
+        // Step 5: attach that agent to maven test lifecycle job
+        CommandStarter.start("mvn",
+                "clean",
+                "test",
+                "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml",
+                "-DargLine=" + agent.javaAgentPath()
+        );
+
+        // Step 6: parse JFR file to JSON with all the execution samples
+        SamplerResultsProcessor processor = new SamplerResultsProcessor();
+        var parsedJFR = processor.extractSamplesFromJFR(new File(agent.rawOutputPath()), config);
+
+        // Step 7: convert samples to Peass tree
+        var root = processor.convertResultsToPeassTree(parsedJFR, "00000", "11111");
+
+        System.out.println(root);
+        System.out.println(agent);
+
     }
 
     private String determineProfilerPathByOS() {

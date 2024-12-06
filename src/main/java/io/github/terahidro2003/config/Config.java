@@ -1,9 +1,9 @@
-package com.juoska.config;
+package io.github.terahidro2003.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.juoska.utils.FileUtils;
+import io.github.terahidro2003.utils.FileUtils;
 import groovy.util.logging.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +16,7 @@ import java.nio.file.Files;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
 @Slf4j
-public record Config(String classPath, String mainClass, String profilerPath, String outputPath, String profilerRawOutputPath) implements Serializable {
+public record Config(String classPath, String mainClass, String profilerPath, String outputPath, Boolean fullSamples, Integer frequency) implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -51,7 +51,7 @@ public record Config(String classPath, String mainClass, String profilerPath, St
         if(!config.classPath.contains(".jar") && config.classPath.contains(".txt")) {
             try {
                 String classPath = FileUtils.readFileToString(config.classPath);
-                return new Config(classPath, config.mainClass, config.profilerPath, config.outputPath, config.profilerRawOutputPath);
+                return new Config(classPath, config.mainClass, config.profilerPath, config.outputPath, config.fullSamples, config.frequency);
             } catch (IOException e) {
                 return config;
             }

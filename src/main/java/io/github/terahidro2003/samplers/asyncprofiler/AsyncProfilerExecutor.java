@@ -1,17 +1,17 @@
-package com.juoska.samplers.asyncprofiler;
+package io.github.terahidro2003.samplers.asyncprofiler;
 
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.juoska.config.Config;
-import com.juoska.result.SamplerResultsProcessor;
-import com.juoska.result.StackTraceData;
-import com.juoska.result.StackTraceTreeBuilder;
-import com.juoska.result.StackTraceTreeNode;
-import com.juoska.samplers.SamplerExecutorPipeline;
-import com.juoska.samplers.jfr.ExecutionSample;
-import com.juoska.utils.CommandStarter;
-import com.juoska.utils.FileUtils;
+import io.github.terahidro2003.config.Config;
+import io.github.terahidro2003.result.SamplerResultsProcessor;
+import io.github.terahidro2003.result.StackTraceData;
+import io.github.terahidro2003.result.StackTraceTreeBuilder;
+import io.github.terahidro2003.result.StackTraceTreeNode;
+import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
+import io.github.terahidro2003.samplers.jfr.ExecutionSample;
+import io.github.terahidro2003.utils.CommandStarter;
+import io.github.terahidro2003.utils.FileUtils;
 import de.dagere.peass.config.MeasurementConfig;
 import de.dagere.peass.measurement.rca.data.CallTreeNode;
 import groovy.util.logging.Slf4j;
@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,18 +47,34 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         return duration;
     }
 
-    private File rawProfilerOutput(Config config) throws IOException {
-        File rawOutputFile = new File(config.profilerRawOutputPath());
-        if(rawOutputFile.createNewFile()) {
-            log.info("Created new file for raw asprof output: {}", rawOutputFile.getAbsolutePath());
-        } else {
-            log.info("File for asprof output probably already exists: {}", rawOutputFile.getAbsolutePath());
+    private Config retrieveAsyncProfiler(Config config) throws IOException {
+        if (config.profilerPath() == null || config.profilerPath().isEmpty()) {
+            File folder = new File(config.outputPath() + "/executables");
+            if(!folder.exists()) {
+                folder.mkdirs();
+            }
+            String profilerPath = FileUtils.retrieveAsyncProfilerExecutable(folder.toPath());
+            log.warn("Downloaded profiler path: {}", profilerPath);
+            return new Config(config.classPath(), config.mainClass(), profilerPath, config.outputPath(), config.fullSamples(), config.frequency());
         }
-        return rawOutputFile;
+        return config;
+    }
+
+    @Override
+    public MeasurementInformation javaAgent(Config config, Duration samplingDuration) {
+        configureResultsFolder(config);
+        try {
+            config = retrieveAsyncProfiler(config);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return AsyncProfilerHelper.getInstance(config).retrieveJavaAgent(samplingDuration);
     }
 
     @Override
     public void execute(long pid, Config config, Duration duration) throws InterruptedException, IOException {
+        configureResultsFolder(config);
+        config = retrieveAsyncProfiler(config);
         // TODO: allow custom frequency in hz specified in config
         String[] command = {config.profilerPath(), "-d", String.valueOf(duration.getSeconds()), String.valueOf(pid)};
 
@@ -78,17 +95,37 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
     @Override
     public void execute(Config config, Duration duration) throws InterruptedException, IOException {
-        log.info("Executing async-profiler sampler with the following configuration: classPath: {}, mainClass: {}, profilerPath: {}, tempFilePath: {}, profilerRawOutputPath: {}", config.classPath(), config.mainClass(), config.profilerPath(), config.outputPath(), config.profilerRawOutputPath());
+        execute(config, duration, "00000", "11111");
+    }
+
+    private void configureResultsFolder(Config config) {
+        if (config.outputPath().isEmpty()) {
+            throw new IllegalArgumentException("No output path specified");
+        }
+
+        File outputFolder = new File(config.outputPath());
+        if (!outputFolder.exists()) {
+            if (!outputFolder.mkdirs()) {
+                throw new IllegalStateException("Failed to create output folder: " + outputFolder.getAbsolutePath());
+            }
+        }
+    }
+
+    @Override
+    public void execute(Config config, Duration duration, String commit, String oldCommit) throws InterruptedException, IOException {
+        configureResultsFolder(config);
+        config = retrieveAsyncProfiler(config);
+        log.info("Executing async-profiler sampler with the following configuration: classPath: {}, mainClass: {}, profilerPath: {}, outputPath: {}", config.classPath(), config.mainClass(), config.profilerPath(), config.outputPath());
         duration = chooseDuration(duration);
 
-        Thread javaBenchmarkThread = getBenchmarkThread(config, duration, null);
+        File output = AsyncProfilerHelper.getInstance(config).retrieveRawOutputFile();
+        Thread javaBenchmarkThread = getBenchmarkThread(config, duration, output);
         execute(javaBenchmarkThread, config, duration);
 
-        File output = rawProfilerOutput(config);
         InputStream input = new FileInputStream(output);
         var samples = parseProfile(input);
 
-        if(config.profilerRawOutputPath().contains("jfr")) {
+        if(config.fullSamples()) {
             // retrieve samples from JFR file
             List<String> command = new ArrayList<>();
             command.add("jfr");
@@ -98,12 +135,12 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
             command.add("JVM");
             command.add("--events");
             command.add("Profiling");
-            command.add(config.profilerRawOutputPath());
+            command.add(output.getAbsolutePath());
 
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Process process = processBuilder.start();
             InputStream processInputStream = process.getInputStream();
-            String jfr_json = "./jfr_asprof_samples" + System.currentTimeMillis() + ".json";
+            String jfr_json = AsyncProfilerHelper.getInstance(config).rawProfilerOutput("parsed_jfr_samples" + System.currentTimeMillis() + ".json").getAbsolutePath();
             FileUtils.inputStreamToFile(processInputStream, jfr_json);
 
             SamplerResultsProcessor samplerResultsProcessor = new SamplerResultsProcessor();
@@ -126,7 +163,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         }
 
         CallTreeNode callTreeNode = null;
-        toPeasDS(root, callTreeNode);
+        toPeasDS(root, callTreeNode, commit, oldCommit);
     }
 
     private void execute(Thread workload, Config config, Duration duration) throws InterruptedException, IOException {
@@ -170,7 +207,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         return stackTraceTreeBuilder.build(samples);
     }
 
-    private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode) {
+    private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode, String commit, String oldCommit) {
         MeasurementConfig measurementConfig = new MeasurementConfig(1, "00000", "00000");
 
         if(peasNode == null) {
@@ -183,22 +220,22 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
                     methodNameWithNew,
                     measurementConfig);
 
-            createPeassNode(node, peasNode);
+            createPeassNode(node, peasNode, commit, oldCommit);
         } else {
-            createPeassNode(node, peasNode);
+            createPeassNode(node, peasNode, commit, oldCommit);
             peasNode = peasNode.getChildByKiekerPattern(node.getMethodName() + "()");
         }
 
         List<StackTraceTreeNode> children = node.getChildren();
         for (StackTraceTreeNode child : children) {
-            toPeasDS(child, peasNode);
+            toPeasDS(child, peasNode, commit, oldCommit);
         }
     }
 
-    private void createPeassNode(StackTraceTreeNode node, CallTreeNode peasNode) {
+    private void createPeassNode(StackTraceTreeNode node, CallTreeNode peasNode, String commit, String oldCommit) {
         peasNode.initCommitData();
-        peasNode.initVMData("00000");
-        peasNode.addMeasurement("00000", node.getTimeTaken());
+        peasNode.initVMData(commit);
+        peasNode.addMeasurement(commit, node.getTimeTaken());
 
         // check is done as a workaround for Peass kieker pattern check
         if(node.getMethodName().contains("<init>")) {
@@ -214,20 +251,14 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
             );
         }
 
-        peasNode.createStatistics("00000");
+        peasNode.createStatistics(commit);
     }
 
-    private Thread getBenchmarkThread(Config config, Duration duration, Duration frequency) {
+    private Thread getBenchmarkThread(Config config, Duration duration, File output) {
         log.info("Sampling for {} seconds", duration.getSeconds());
         List<String> command = new ArrayList<>();
         command.add("java");
-
-        if(frequency == null) {
-            command.add("-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",interval=10ms,event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
-        } else {
-            command.add("-agentpath:"+ config.profilerPath()+"=start,interval=" + frequency.get(TimeUnit.MILLISECONDS.toChronoUnit()) + "ms,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + config.profilerRawOutputPath());
-        }
-
+        command.add(AsyncProfilerHelper.getInstance(config, output).retrieveJavaAgent(duration).javaAgentPath());
         command.add("-Dfile.encoding=UTF-8");
 
         if(config.classPath().contains(".jar")) {

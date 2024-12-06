@@ -74,5 +74,5 @@ If you want to use SJSW in you own project:
     ```
 
 4. Adjust values remaining values in [config.json](config.json) like described in [Configuration File](#configuration-file) section that are specific to your benchmark project.
-5. Execute [StandaloneSampler](/src/main/java/com/juoska/StandaloneSampler.java) as main, or use the [SamplerExecutorPipeline](src/main/java/com/juoska/samplers/SamplerExecutorPipeline.java) like it is described in [Using as a Library](#using-as-a-library)
+5. Execute [StandaloneSampler](/io/github/terahidro2003/StandaloneSampler.java) as main, or use the [SamplerExecutorPipeline](src/main/java/io/github/terahidro2003/samplers/SamplerExecutorPipeline.java) like it is described in [Using as a Library](#using-as-a-library)
 6. Raw output and the tree should be outputted to the console.
