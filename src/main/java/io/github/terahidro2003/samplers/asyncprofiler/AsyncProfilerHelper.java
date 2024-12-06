@@ -46,7 +46,7 @@ public class AsyncProfilerHelper {
         return output;
     }
 
-    public String retrieveJavaAgent(Duration duration) {
+    public MeasurementInformation retrieveJavaAgent(Duration duration) {
         File output = retrieveRawOutputFile();
         final String asprofAgent;
 
@@ -55,7 +55,7 @@ public class AsyncProfilerHelper {
         } else {
             asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.frequency() + "ms,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + output;
         }
-        return asprofAgent;
+        return new MeasurementInformation(output.getAbsolutePath(), asprofAgent);
     }
 
     public File rawProfilerOutput(String name) {

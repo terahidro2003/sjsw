@@ -61,7 +61,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     @Override
-    public String javaAgent(Config config, Duration samplingDuration) {
+    public MeasurementInformation javaAgent(Config config, Duration samplingDuration) {
         configureResultsFolder(config);
         try {
             config = retrieveAsyncProfiler(config);
@@ -258,7 +258,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         log.info("Sampling for {} seconds", duration.getSeconds());
         List<String> command = new ArrayList<>();
         command.add("java");
-        command.add(AsyncProfilerHelper.getInstance(config, output).retrieveJavaAgent(duration));
+        command.add(AsyncProfilerHelper.getInstance(config, output).retrieveJavaAgent(duration).javaAgentPath());
         command.add("-Dfile.encoding=UTF-8");
 
         if(config.classPath().contains(".jar")) {

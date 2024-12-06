@@ -155,11 +155,15 @@ class AsyncProfilerExecutorIntegrationTest {
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
         String agent = pipeline.javaAgent(config, duration);
 
+        // Step 4: generate java asprof agent as string together with JFR file location
+        MeasurementInformation agent = pipeline.javaAgent(config, duration);
+
+        // Step 5: attach that agent to maven test lifecycle job
         CommandStarter.start("mvn",
                 "clean",
                 "test",
                 "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml",
-                "-DargLine=" + agent
+                "-DargLine=" + agent.javaAgentPath()
         );
 
         System.out.println(agent);
