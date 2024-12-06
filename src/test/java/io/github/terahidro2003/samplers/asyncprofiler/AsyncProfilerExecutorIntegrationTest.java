@@ -31,7 +31,7 @@ class AsyncProfilerExecutorIntegrationTest {
     @Test
     public void test() {
         // run mvn install on benchmark application
-        CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+        CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml", "-DskipTests");
 
         // config
         Config config = new Config(
@@ -57,11 +57,8 @@ class AsyncProfilerExecutorIntegrationTest {
 
     @Test
     public void testWithJarFile() {
-        // run mvn install on benchmark application
-        CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
-
         // compile JAR file for TestBenchmark
-        CommandStarter.start("mvn", "clean", "package", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+        CommandStarter.start("mvn", "clean", "package", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml", "-DskipTests");
 
         // config
         Config config = new Config(
@@ -91,7 +88,7 @@ class AsyncProfilerExecutorIntegrationTest {
         CommandStarter.start("mvn", "clean", "install", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
 
         // compile JAR file for TestBenchmark
-        CommandStarter.start("mvn", "clean", "package", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+        CommandStarter.start("mvn", "clean", "package", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml", "-DskipTests");
 
         // config
         Config config = new Config(
@@ -118,7 +115,7 @@ class AsyncProfilerExecutorIntegrationTest {
     @Test
     public void testWithoutSpecifiedProfilerPath() {
         // compile JAR file for TestBenchmark
-        CommandStarter.start("mvn", "clean", "package", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
+        CommandStarter.start("mvn", "clean", "package", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml", "-DskipTests");
 
         // config
         Config config = new Config(
