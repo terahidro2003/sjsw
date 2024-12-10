@@ -39,7 +39,7 @@ public class AsyncProfilerHelper {
             return this.output;
         }
         File output = rawProfilerOutput("asprof_results_" + System.currentTimeMillis() + ".json");
-        if(config.fullSamples()) {
+        if(config.JfrEnabled()) {
             output = rawProfilerOutput("asprof_results_" + System.currentTimeMillis() + ".jfr");
         }
         this.output = output;

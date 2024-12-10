@@ -27,6 +27,7 @@ class AsyncProfilerExecutorIntegrationTest {
     final File benchmarkTargetDir = new File("src/test/resources/TestBenchmark/target");
     final File benchmarkProjectDir = new File("src/test/resources/TestBenchmark");
     private static final String MEASUREMENTS_PATH = "./sjsw-test-measurements";
+    private static final String MAIN_BENCHMARK_CLASS = "io.github.terahidro2003.benchmark.TestBenchmark";
 
     @Test
     public void test() {
@@ -36,7 +37,7 @@ class AsyncProfilerExecutorIntegrationTest {
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/classes",
-                "io.github.terahidro2003.TestBenchmark",
+                MAIN_BENCHMARK_CLASS,
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
                 false,
@@ -63,7 +64,7 @@ class AsyncProfilerExecutorIntegrationTest {
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
-                "io.github.terahidro2003.TestBenchmark",
+                MAIN_BENCHMARK_CLASS,
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
                 false,
@@ -90,7 +91,7 @@ class AsyncProfilerExecutorIntegrationTest {
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
-                "io.github.terahidro2003.TestBenchmark",
+                MAIN_BENCHMARK_CLASS,
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
                 true,
@@ -117,7 +118,7 @@ class AsyncProfilerExecutorIntegrationTest {
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
-                "io.github.terahidro2003.TestBenchmark",
+                MAIN_BENCHMARK_CLASS,
                 "",
                 MEASUREMENTS_PATH,
                 true,
