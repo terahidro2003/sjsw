@@ -16,22 +16,9 @@ import java.nio.file.Files;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
 @Slf4j
-public record Config(String classPath, String mainClass, String profilerPath, String outputPath, Boolean fullSamples, Integer frequency) implements Serializable {
+public record Config(String executable, String mainClass, String profilerPath, String outputPath, Boolean JfrEnabled, Integer frequency) implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
-
-    // TODO: test whether config properties passed as args work
-    public static Config retrieveConfiguration(String... args) {
-        if (args != null && args.length != 1) {
-            log.warn("No config specified through arguments. Falling back to config.json");
-            return retrieveConfiguration(new File("config.json"));
-        }
-
-        assert args != null;
-        String configFilePath = args[0];
-
-        return retrieveConfiguration(new File(configFilePath));
-    }
 
     public static Config retrieveConfiguration(File configPath) {
         ObjectReader reader = Constants.OBJECT_MAPPER.readerFor(Config.class);
@@ -48,10 +35,10 @@ public record Config(String classPath, String mainClass, String profilerPath, St
     }
 
     private static Config adjustClasspathValue(Config config) {
-        if(!config.classPath.contains(".jar") && config.classPath.contains(".txt")) {
+        if(!config.executable.contains(".jar") && config.executable.contains(".txt")) {
             try {
-                String classPath = FileUtils.readFileToString(config.classPath);
-                return new Config(classPath, config.mainClass, config.profilerPath, config.outputPath, config.fullSamples, config.frequency);
+                String classPath = FileUtils.readFileToString(config.executable);
+                return new Config(classPath, config.mainClass, config.profilerPath, config.outputPath, config.JfrEnabled, config.frequency);
             } catch (IOException e) {
                 return config;
             }

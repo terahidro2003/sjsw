@@ -55,7 +55,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
             }
             String profilerPath = FileUtils.retrieveAsyncProfilerExecutable(folder.toPath());
             log.warn("Downloaded profiler path: {}", profilerPath);
-            return new Config(config.classPath(), config.mainClass(), profilerPath, config.outputPath(), config.fullSamples(), config.frequency());
+            return new Config(config.executable(), config.mainClass(), profilerPath, config.outputPath(), config.JfrEnabled(), config.frequency());
         }
         return config;
     }
@@ -115,7 +115,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     public void execute(Config config, Duration duration, String commit, String oldCommit) throws InterruptedException, IOException {
         configureResultsFolder(config);
         config = retrieveAsyncProfiler(config);
-        log.info("Executing async-profiler sampler with the following configuration: classPath: {}, mainClass: {}, profilerPath: {}, outputPath: {}", config.classPath(), config.mainClass(), config.profilerPath(), config.outputPath());
+        log.info("Executing async-profiler sampler with the following configuration: classPath: {}, mainClass: {}, profilerPath: {}, outputPath: {}", config.executable(), config.mainClass(), config.profilerPath(), config.outputPath());
         duration = chooseDuration(duration);
 
         File output = AsyncProfilerHelper.getInstance(config).retrieveRawOutputFile();
@@ -125,7 +125,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         InputStream input = new FileInputStream(output);
         var samples = parseProfile(input);
 
-        if(config.fullSamples()) {
+        if(config.JfrEnabled()) {
             // retrieve samples from JFR file
             List<String> command = new ArrayList<>();
             command.add("jfr");
@@ -261,12 +261,12 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         command.add(AsyncProfilerHelper.getInstance(config, output).retrieveJavaAgent(duration).javaAgentPath());
         command.add("-Dfile.encoding=UTF-8");
 
-        if(config.classPath().contains(".jar")) {
+        if(config.executable().contains(".jar")) {
             command.add("-jar");
         } else {
             command.add("-cp");
         }
-        command.add(config.classPath());
+        command.add(config.executable());
 
         if(config.mainClass().contains(" ")) {
             var mains = config.mainClass().split(" ");
