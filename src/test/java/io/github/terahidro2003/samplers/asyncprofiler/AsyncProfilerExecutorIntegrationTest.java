@@ -36,7 +36,7 @@ class AsyncProfilerExecutorIntegrationTest {
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/classes",
-                "com.juoska.benchmark.TestBenchmark",
+                "io.github.terahidro2003.TestBenchmark",
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
                 false,
@@ -50,8 +50,8 @@ class AsyncProfilerExecutorIntegrationTest {
         Assertions.assertDoesNotThrow(() -> pipeline.write("destination.json"));
 
         // assert that tree at least includes benchmark method names
-        Set<String> methodNames = Set.of("com.juoska.benchmark.TestBenchmark.methodB",
-                "com.juoska.benchmark.TestBenchmark.methodA", "com.juoska.benchmark.TestBenchmark.main");
+        Set<String> methodNames = Set.of("io.github.terahidro2003.TestBenchmark.methodB",
+                "io.github.terahidro2003.TestBenchmark.methodA", "io.github.terahidro2003.TestBenchmark.main");
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
     }
 
@@ -63,7 +63,7 @@ class AsyncProfilerExecutorIntegrationTest {
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
-                "com.juoska.benchmark.TestBenchmark",
+                "io.github.terahidro2003.TestBenchmark",
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
                 false,
@@ -77,8 +77,8 @@ class AsyncProfilerExecutorIntegrationTest {
         Assertions.assertDoesNotThrow(() -> pipeline.write("destination.json"));
 
         // assert that tree at least includes benchmark method names
-        Set<String> methodNames = Set.of("com.juoska.benchmark.TestBenchmark.methodB",
-                "com.juoska.benchmark.TestBenchmark.methodA", "com.juoska.benchmark.TestBenchmark.main");
+        Set<String> methodNames = Set.of("io.github.terahidro2003.TestBenchmark.methodB",
+                "io.github.terahidro2003.TestBenchmark.methodA", "io.github.terahidro2003.TestBenchmark.main");
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
     }
 
@@ -90,7 +90,7 @@ class AsyncProfilerExecutorIntegrationTest {
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
-                "com.juoska.benchmark.TestBenchmark",
+                "io.github.terahidro2003.TestBenchmark",
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
                 true,
@@ -117,7 +117,7 @@ class AsyncProfilerExecutorIntegrationTest {
         // config
         Config config = new Config(
                 benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
-                "com.juoska.benchmark.TestBenchmark",
+                "io.github.terahidro2003.TestBenchmark",
                 "",
                 MEASUREMENTS_PATH,
                 true,

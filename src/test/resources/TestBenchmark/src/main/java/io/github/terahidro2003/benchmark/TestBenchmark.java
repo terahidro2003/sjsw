@@ -1,4 +1,4 @@
-package com.juoska.benchmark;
+package io.github.terahidro2003.benchmark;
 
 import java.util.LinkedList;
 import java.util.List;

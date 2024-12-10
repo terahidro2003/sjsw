@@ -184,6 +184,9 @@
                         <excludes>
                             **/TestBenchmark.java
                         </excludes>
+                        <excludes>
+                            **/ExampleTest.java
+                        </excludes>
                     </configuration>
                 </plugin>
                 
