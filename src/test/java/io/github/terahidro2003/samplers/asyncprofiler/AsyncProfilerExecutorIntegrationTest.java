@@ -51,8 +51,8 @@ class AsyncProfilerExecutorIntegrationTest {
         Assertions.assertDoesNotThrow(() -> pipeline.write("destination.json"));
 
         // assert that tree at least includes benchmark method names
-        Set<String> methodNames = Set.of("io.github.terahidro2003.TestBenchmark.methodB",
-                "io.github.terahidro2003.TestBenchmark.methodA", "io.github.terahidro2003.TestBenchmark.main");
+        Set<String> methodNames = Set.of("io.github.terahidro2003.benchmark.methodB",
+                "io.github.terahidro2003.benchmark.methodA", "io.github.terahidro2003.benchmark.main");
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
     }
 
@@ -78,8 +78,8 @@ class AsyncProfilerExecutorIntegrationTest {
         Assertions.assertDoesNotThrow(() -> pipeline.write("destination.json"));
 
         // assert that tree at least includes benchmark method names
-        Set<String> methodNames = Set.of("io.github.terahidro2003.TestBenchmark.methodB",
-                "io.github.terahidro2003.TestBenchmark.methodA", "io.github.terahidro2003.TestBenchmark.main");
+        Set<String> methodNames = Set.of("io.github.terahidro2003.benchmark.methodB",
+                "io.github.terahidro2003.benchmark.methodA", "io.github.terahidro2003.benchmark.main");
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
     }
 
@@ -175,7 +175,6 @@ class AsyncProfilerExecutorIntegrationTest {
 
         System.out.println(root);
         System.out.println(agent);
-
     }
 
     private String determineProfilerPathByOS() {
