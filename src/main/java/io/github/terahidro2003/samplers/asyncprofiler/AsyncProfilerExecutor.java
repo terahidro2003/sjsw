@@ -19,13 +19,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
@@ -36,29 +34,6 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     private volatile boolean benchmarkException = false;
 
     private StackTraceTreeNode root;
-
-    private Duration chooseDuration(Duration duration) {
-        if(duration == null || duration.getSeconds() <= 0) {
-            log.warn("No duration was specified. Setting default sampling duration of 10 seconds.");
-            duration = Duration.ofSeconds(10);
-        } else {
-            log.info("Setting sampling duration of {} seconds.", duration);
-        }
-        return duration;
-    }
-
-    private Config retrieveAsyncProfiler(Config config) throws IOException {
-        if (config.profilerPath() == null || config.profilerPath().isEmpty()) {
-            File folder = new File(config.outputPath() + "/executables");
-            if(!folder.exists()) {
-                folder.mkdirs();
-            }
-            String profilerPath = FileUtils.retrieveAsyncProfilerExecutable(folder.toPath());
-            log.warn("Downloaded profiler path: {}", profilerPath);
-            return new Config(config.executable(), config.mainClass(), profilerPath, config.outputPath(), config.JfrEnabled(), config.frequency());
-        }
-        return config;
-    }
 
     @Override
     public MeasurementInformation javaAgent(Config config, Duration samplingDuration) {
@@ -198,9 +173,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
     @Override
     public void execute(Config config, Duration samplingDuration, Duration frequency) throws InterruptedException, IOException {
-
     }
-
 
     private StackTraceTreeNode generateTree(List<StackTraceData> samples) {
         StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
@@ -340,5 +313,28 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     @Override
     public StackTraceTreeNode getStackTraceTree() {
         return root;
+    }
+
+    private Duration chooseDuration(Duration duration) {
+        if(duration == null || duration.getSeconds() <= 0) {
+            log.warn("No duration was specified. Setting default sampling duration of 10 seconds.");
+            duration = Duration.ofSeconds(10);
+        } else {
+            log.info("Setting sampling duration of {} seconds.", duration);
+        }
+        return duration;
+    }
+
+    private Config retrieveAsyncProfiler(Config config) throws IOException {
+        if (config.profilerPath() == null || config.profilerPath().isEmpty()) {
+            File folder = new File(config.outputPath() + "/executables");
+            if(!folder.exists()) {
+                folder.mkdirs();
+            }
+            String profilerPath = FileUtils.retrieveAsyncProfilerExecutable(folder.toPath());
+            log.warn("Downloaded profiler path: {}", profilerPath);
+            return new Config(config.executable(), config.mainClass(), profilerPath, config.outputPath(), config.JfrEnabled(), config.frequency());
+        }
+        return config;
     }
 }
