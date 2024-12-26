@@ -43,7 +43,7 @@ class AsyncProfilerExecutorIntegrationTest {
                 false,
                 0
         );
-        Duration duration = Duration.ofSeconds(10);
+        Duration duration = Duration.ofSeconds(30);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
 
         // run (and assert whether both phases throw an exception)
@@ -70,7 +70,7 @@ class AsyncProfilerExecutorIntegrationTest {
                 false,
                 0
         );
-        Duration duration = Duration.ofSeconds(10);
+        Duration duration = Duration.ofSeconds(30);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
 
         // run (and assert whether both phases throw an exception)
@@ -97,7 +97,7 @@ class AsyncProfilerExecutorIntegrationTest {
                 true,
                 0
         );
-        Duration duration = Duration.ofSeconds(60);
+        Duration duration = Duration.ofSeconds(30);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
 
         // run (and assert whether both phases throw an exception)
