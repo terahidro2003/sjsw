@@ -36,14 +36,14 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     private StackTraceTreeNode root;
 
     @Override
-    public MeasurementInformation javaAgent(Config config, Duration samplingDuration) {
+    public MeasurementInformation javaAgent(Config config, int vmId, String commit, Duration samplingDuration) {
         configureResultsFolder(config);
         try {
             config = retrieveAsyncProfiler(config);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return AsyncProfilerHelper.getInstance(config).retrieveJavaAgent(samplingDuration);
+        return AsyncProfilerHelper.getInstance(config).retrieveJavaAgent(samplingDuration, vmId, commit);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
     @Override
     public void execute(Config config, Duration duration) throws InterruptedException, IOException {
-        execute(config, duration, "00000", "11111");
+        execute(config, duration, 1, 1, "00000", "11111");
     }
 
     private void configureResultsFolder(Config config) {
@@ -87,13 +87,13 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     @Override
-    public void execute(Config config, Duration duration, String commit, String oldCommit) throws InterruptedException, IOException {
+    public void execute(Config config, Duration duration, int vmId, int vms, String commit, String oldCommit) throws InterruptedException, IOException {
         configureResultsFolder(config);
         config = retrieveAsyncProfiler(config);
         log.info("Executing async-profiler sampler with the following configuration: classPath: {}, mainClass: {}, profilerPath: {}, outputPath: {}", config.executable(), config.mainClass(), config.profilerPath(), config.outputPath());
         duration = chooseDuration(duration);
 
-        File output = AsyncProfilerHelper.getInstance(config).retrieveRawOutputFile();
+        File output = AsyncProfilerHelper.getInstance(config).retrieveRawOutputFile(vmId, commit);
         Thread javaBenchmarkThread = getBenchmarkThread(config, duration, output);
         execute(javaBenchmarkThread, config, duration);
 
@@ -138,7 +138,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         }
 
         CallTreeNode callTreeNode = null;
-        toPeasDS(root, callTreeNode, commit, oldCommit);
+        toPeasDS(root, callTreeNode, vms, commit, oldCommit);
     }
 
     private void execute(Thread workload, Config config, Duration duration) throws InterruptedException, IOException {
@@ -180,8 +180,13 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         return stackTraceTreeBuilder.build(samples);
     }
 
-    private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode, String commit, String oldCommit) {
-        MeasurementConfig measurementConfig = new MeasurementConfig(1, "00000", "00000");
+    private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode, int vms, String commit, String oldCommit) {
+        if (commit == null && oldCommit == null) {
+            log.error("Failed to build Peass tree structure. One of the commits have to be supplied, none were.");
+            return;
+        }
+
+        MeasurementConfig measurementConfig = new MeasurementConfig(vms, commit, oldCommit);
 
         if(peasNode == null) {
             String methodNameWithNew = node.getMethodName() + "()";
@@ -201,7 +206,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
         List<StackTraceTreeNode> children = node.getChildren();
         for (StackTraceTreeNode child : children) {
-            toPeasDS(child, peasNode, commit, oldCommit);
+            toPeasDS(child, peasNode, vms, commit, oldCommit);
         }
     }
 
@@ -231,7 +236,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         log.info("Sampling for {} seconds", duration.getSeconds());
         List<String> command = new ArrayList<>();
         command.add("java");
-        command.add(AsyncProfilerHelper.getInstance(config, output).retrieveJavaAgent(duration).javaAgentPath());
+        command.add(AsyncProfilerHelper.getInstance(config, output).retrieveJavaAgent(duration, 0, "unspecified_commit").javaAgentPath());
         command.add("-Dfile.encoding=UTF-8");
 
         if(config.executable().contains(".jar")) {

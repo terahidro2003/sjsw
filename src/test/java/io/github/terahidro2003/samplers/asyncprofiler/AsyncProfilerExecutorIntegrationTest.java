@@ -156,7 +156,7 @@ class AsyncProfilerExecutorIntegrationTest {
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
 
         // Step 4: generate java asprof agent as string together with JFR file location
-        MeasurementInformation agent = pipeline.javaAgent(config, duration);
+        MeasurementInformation agent = pipeline.javaAgent(config, 1, "11111", duration);
 
         // Step 5: attach that agent to maven test lifecycle job
         CommandStarter.start("mvn",
@@ -168,12 +168,12 @@ class AsyncProfilerExecutorIntegrationTest {
 
         // Step 6: parse JFR file to JSON with all the execution samples
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
-        var parsedJFR = processor.extractSamplesFromJFR(new File(agent.rawOutputPath()), config);
+//        var parsedJFR = processor.extractSamplesFromJFR(new File(agent.rawOutputPath()), config);
 
         // Step 7: convert samples to Peass tree
-        var root = processor.convertResultsToPeassTree(parsedJFR, "00000", "11111");
+//        var root = processor.convertResultsToPeassTree(parsedJFR, "00000", "11111");
 
-        System.out.println(root);
+//        System.out.println(root);
         System.out.println(agent);
     }
 

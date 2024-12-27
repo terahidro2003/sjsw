@@ -34,7 +34,7 @@ public class AsyncProfilerHelper {
         return instance == null ? new AsyncProfilerHelper(config, output) : instance;
     }
 
-    public File retrieveRawOutputFile() {
+    public File retrieveRawOutputFile(int vmId, String commit) {
         if (output != null) {
             return this.output;
         }
@@ -46,8 +46,13 @@ public class AsyncProfilerHelper {
         return output;
     }
 
-    public MeasurementInformation retrieveJavaAgent(Duration duration) {
-        File output = retrieveRawOutputFile();
+    private String generateOutputFilePrefix(int vms, String commit) {
+        return "sjsw_asprof_results_" + System.currentTimeMillis() + "_" + vms + "-" + commit;
+    }
+
+    public MeasurementInformation retrieveJavaAgent(Duration duration, int vmId, String commit) {
+        File output = retrieveRawOutputFile(vmId, commit);
+
         final String asprofAgent;
 
         if(config.frequency() == null || config.frequency() == 0) {
