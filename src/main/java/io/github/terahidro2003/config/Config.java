@@ -47,7 +47,15 @@ public record Config(String executable, String mainClass, String profilerPath, S
         }
     }
 
+    public static Config clone(Config config, String outputPath) {
+        return new Config(config.executable(), config.mainClass, config.profilerPath, outputPath, config.JfrEnabled, config.frequency);
+    }
+
     private boolean hasValidProfilerExecutable() {
         return Files.exists(new File(profilerPath).toPath());
+    }
+
+    public static ConfigBuilder builder() {
+        return new ConfigBuilder();
     }
 }

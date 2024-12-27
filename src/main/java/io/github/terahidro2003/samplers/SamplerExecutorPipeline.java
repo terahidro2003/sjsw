@@ -17,14 +17,13 @@ public interface SamplerExecutorPipeline {
      *                         , then the real sampling duration is equal to Java process execution time.
      * @return object with two strings: rawOutputPath - the path of the output file, javaAgentPath - java agent with async-profiler as a string.
      */
-    MeasurementInformation javaAgent(Config config, Duration samplingDuration);
-
+    MeasurementInformation javaAgent(Config config, int vmId, String commit, Duration samplingDuration);
 
     void execute(long pid, Config config, Duration samplingDuration) throws InterruptedException, IOException;
 
     void execute(Config config, Duration samplingDuration) throws InterruptedException, IOException;
 
-    void execute(Config config, Duration samplingDuration, String commit, String oldCommit) throws InterruptedException, IOException;
+    void execute(Config config, Duration samplingDuration, int vmId, int vms, String commit, String oldCommit) throws InterruptedException, IOException;
 
     void execute(Config config ,Duration samplingDuration, Duration frequency) throws InterruptedException, IOException;
 
