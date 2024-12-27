@@ -38,9 +38,12 @@ public class AsyncProfilerHelper {
         if (output != null) {
             return this.output;
         }
-        File output = rawProfilerOutput("asprof_results_" + System.currentTimeMillis() + ".json");
+
+        String outputFilePrefix = generateOutputFilePrefix(vmId, commit);
+
+        File output = rawProfilerOutput(outputFilePrefix + ".json");
         if(config.JfrEnabled()) {
-            output = rawProfilerOutput("asprof_results_" + System.currentTimeMillis() + ".jfr");
+            output = rawProfilerOutput(outputFilePrefix + ".jfr");
         }
         this.output = output;
         return output;
