@@ -59,9 +59,9 @@ public class AsyncProfilerHelper {
         final String asprofAgent;
 
         if(config.frequency() == null || config.frequency() == 0) {
-            asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",interval=10ms,event=wall,clock=monotonic,file=" + output;
+            asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",interval=10ms,cstack=dwarf,event=wall,file=" + output;
         } else {
-            asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.frequency() + "ms,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + output;
+            asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.frequency() + "ms,timeout=" + duration.getSeconds() + ",event=wall,file=" + output;
         }
         return new MeasurementInformation(output.getAbsolutePath(), asprofAgent);
     }
