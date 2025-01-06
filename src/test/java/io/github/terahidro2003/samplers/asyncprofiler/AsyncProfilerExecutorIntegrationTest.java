@@ -2,7 +2,7 @@ package io.github.terahidro2003.samplers.asyncprofiler;
 
 import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.result.SamplerResultsProcessor;
-import io.github.terahidro2003.result.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
 import io.github.terahidro2003.utils.CommandStarter;
 import groovy.util.logging.Slf4j;
@@ -196,8 +196,8 @@ class AsyncProfilerExecutorIntegrationTest {
     }
 
     private void isTreeAssumedValidRecursive(StackTraceTreeNode node, String prefix, boolean isLast, Set<String> methodNames) {
-        if (node.getMethodName() != null) {
-            methodNames.add(node.getMethodName());
+        if (node.getPayload().getMethodName() != null) {
+            methodNames.add(node.getPayload().getMethodName());
         }
 
         List<StackTraceTreeNode> children = node.getChildren();

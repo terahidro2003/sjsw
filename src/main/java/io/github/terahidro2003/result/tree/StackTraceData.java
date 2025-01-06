@@ -1,4 +1,4 @@
-package io.github.terahidro2003.result;
+package io.github.terahidro2003.result.tree;
 
 import java.io.Serializable;
 import java.util.List;
