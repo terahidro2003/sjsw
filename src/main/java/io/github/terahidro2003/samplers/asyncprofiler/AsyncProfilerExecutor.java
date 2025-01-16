@@ -189,11 +189,11 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         MeasurementConfig measurementConfig = new MeasurementConfig(vms, commit, oldCommit);
 
         if(peasNode == null) {
-            String methodNameWithNew = node.getMethodName() + "()";
-            if(node.getMethodName().contains("<init>")) {
-                methodNameWithNew = "new " + node.getMethodName() + "()";
+            String methodNameWithNew = node.getPayload().getMethodName() + "()";
+            if(node.getPayload().getMethodName().contains("<init>")) {
+                methodNameWithNew = "new " + node.getPayload().getMethodName() + "()";
             }
-            peasNode = new CallTreeNode(node.getMethodName(),
+            peasNode = new CallTreeNode(node.getPayload().getMethodName(),
                     methodNameWithNew,
                     methodNameWithNew,
                     measurementConfig);
@@ -201,7 +201,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
             createPeassNode(node, peasNode, commit, oldCommit);
         } else {
             createPeassNode(node, peasNode, commit, oldCommit);
-            peasNode = peasNode.getChildByKiekerPattern(node.getMethodName() + "()");
+            peasNode = peasNode.getChildByKiekerPattern(node.getPayload().getMethodName() + "()");
         }
 
         List<StackTraceTreeNode> children = node.getChildren();
@@ -213,19 +213,19 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     private void createPeassNode(StackTraceTreeNode node, CallTreeNode peasNode, String commit, String oldCommit) {
         peasNode.initCommitData();
         peasNode.initVMData(commit);
-        peasNode.addMeasurement(commit, node.getTimeTaken());
+//        peasNode.addMeasurement(commit, node.getTimeTaken());
 
         // check is done as a workaround for Peass kieker pattern check
-        if(node.getMethodName().contains("<init>")) {
-            String methodNameWithNew = "new " + node.getMethodName() + "()";
-            peasNode.appendChild(node.getMethodName(),
+        if(node.getPayload().getMethodName().contains("<init>")) {
+            String methodNameWithNew = "new " + node.getPayload().getMethodName() + "()";
+            peasNode.appendChild(node.getPayload().getMethodName(),
                     methodNameWithNew,
                     methodNameWithNew
             );
         } else {
-            peasNode.appendChild(node.getMethodName(),
-                    node.getMethodName() + "()",
-                    node.getMethodName() + "()"
+            peasNode.appendChild(node.getPayload().getMethodName(),
+                    node.getPayload().getMethodName() + "()",
+                    node.getPayload().getMethodName() + "()"
             );
         }
 

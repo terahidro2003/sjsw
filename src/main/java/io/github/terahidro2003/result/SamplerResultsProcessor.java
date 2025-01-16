@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Stack;
 
 import static io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerExecutor.log;
 
@@ -40,9 +41,43 @@ public class SamplerResultsProcessor {
         }
     }
 
-    public StackTraceTreeNode getTreeFromJfr(List<File> jfrs) {
+    public StackTraceTreeNode getTreeFromJfr(List<File> jfrs, String... identifier) {
         StacktraceTreeModel model = jfrToStacktraceGraph(jfrs);
-        return StackTraceTreeBuilder.buildFromStacktraceTreeModel(model);
+        StackTraceTreeNode tree = StackTraceTreeBuilder.buildFromStacktraceTreeModel(model);
+
+        for (File measurementJfr : jfrs) {
+            StacktraceTreeModel localModel = jfrToStacktraceGraph(List.of(measurementJfr));
+            StackTraceTreeNode localTree = StackTraceTreeBuilder.buildFromStacktraceTreeModel(localModel);
+            localTree.printTree();
+            addLocalMeasurements(tree, localTree, identifier[0]);
+        }
+
+        return tree;
+    }
+
+    private void addLocalMeasurements(StackTraceTreeNode bat, StackTraceTreeNode localTree, String identifier) {
+        if (bat == null || localTree == null) {
+            throw new IllegalArgumentException("Both stacktrace trees must be non-null");
+        }
+
+        Stack<StackTraceTreeNode> stack = new Stack<>();
+        stack.push(localTree);
+
+        while (!stack.isEmpty()) {
+            StackTraceTreeNode currentNode = stack.pop();
+            System.out.print(currentNode.getPayload() + " ");
+
+            var result = StackTraceTreeBuilder.search(currentNode, bat);
+            if (result != null) {
+                result.getPayload().addMeasurement(identifier, localTree.getPayload().getInitialWeight());
+            }
+
+            for (StackTraceTreeNode child : currentNode.getChildren()) {
+                if (child != null) {
+                    stack.push(child);
+                }
+            }
+        }
     }
 
     public List<File> listJfrMeasurementFiles(Path directory, List<String> containables) {

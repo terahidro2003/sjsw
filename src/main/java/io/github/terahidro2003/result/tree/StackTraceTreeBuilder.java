@@ -7,6 +7,7 @@ import org.openjdk.jmc.flightrecorder.stacktrace.tree.StacktraceTreeModel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Stack;
 
 public class StackTraceTreeBuilder {
     private StackTraceTreeNode root;
@@ -145,6 +146,7 @@ public class StackTraceTreeBuilder {
         );
 
         StackTraceTreeNode node = new StackTraceTreeNode(callee, new ArrayList<>(), payload);
+        node.getPayload().setInitialWeight(stacktraceTreeModel.getCumulativeWeight());
 
         var children = stacktraceTreeModel.getChildren();
         List<StackTraceTreeNode> newChildren = new ArrayList<>();
@@ -155,7 +157,24 @@ public class StackTraceTreeBuilder {
         return node;
     }
 
-    public static StackTraceTreeNode addMeasurement() {
+    public static StackTraceTreeNode search(StackTraceTreeNode searchable, StackTraceTreeNode tree) {
+        Stack<StackTraceTreeNode> stack = new Stack<>();
+        stack.push(tree);
+
+        while (!stack.isEmpty()) {
+            StackTraceTreeNode currentNode = stack.pop();
+
+            if(searchable.equals(currentNode)) {
+                return currentNode;
+            }
+
+            for (StackTraceTreeNode child : currentNode.getChildren()) {
+                if (child != null) {
+                    stack.push(child);
+                }
+            }
+        }
+
         return null;
     }
 }
