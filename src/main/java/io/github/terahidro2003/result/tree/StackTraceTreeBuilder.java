@@ -146,7 +146,6 @@ public class StackTraceTreeBuilder {
         );
 
         StackTraceTreeNode node = new StackTraceTreeNode(callee, new ArrayList<>(), payload);
-        System.out.println(stacktraceTreeModel.getCumulativeWeight());
         node.setInitialWeight(stacktraceTreeModel.getCumulativeWeight());
 
         var children = stacktraceTreeModel.getChildren();
