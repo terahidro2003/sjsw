@@ -1,6 +1,5 @@
 package io.github.terahidro2003.samplers.asyncprofiler;
 
-import de.dagere.peass.measurement.rca.data.CallTreeNode;
 import groovy.util.logging.Slf4j;
 import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.result.SamplerResultsProcessor;
@@ -10,10 +9,8 @@ import io.github.terahidro2003.utils.CommandStarter;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 
 import static io.github.terahidro2003.samplers.asyncprofiler.TestConstants.*;
@@ -22,23 +19,22 @@ import static io.github.terahidro2003.samplers.asyncprofiler.TestConstants.*;
 public class PeassIntegrationTest {
 
     @Test
-    void integrate() throws IOException {
+    void integrate() {
         final String[] commits = {"11111"};
-        final int vms = 3;
+        final int vms = 5;
+        final String testcaseMethod = "testing";
 
         MeasurementIdentifier measurementIdentifier = new MeasurementIdentifier();
         String outputPath = benchmarkProjectDir.getAbsolutePath() + "/profiler-results";
 
         Config config = Config.builder()
                 .outputPathWithIdentifier(outputPath, measurementIdentifier)
-                .profilerPath(MAC_OS_ASPROF_AGENT)
+                .autodownloadProfiler()
                 .jfrEnabled(true)
-                .frequency(100)
+                .frequency(15)
                 .build();
 
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
-        List<CallTreeNode> peassNodes = new ArrayList<>();
-
 
         // Measure
         for (int i = 0; i < vms; i++) {
@@ -58,9 +54,8 @@ public class PeassIntegrationTest {
             // Build BAT
             List<File> commitJfrs = processor.listJfrMeasurementFiles(resultsPath, List.of(commits[i]));
             StackTraceTreeNode tree = processor.getTreeFromJfr(commitJfrs, commits[i]);
-            tree.printTree();
-
-
+            StackTraceTreeNode filteredTestcaseTree = processor.filterTestcaseSubtree(testcaseMethod, tree);
+            filteredTestcaseTree.printTree();
         }
     }
 
