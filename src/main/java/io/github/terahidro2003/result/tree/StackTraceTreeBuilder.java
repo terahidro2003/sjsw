@@ -95,7 +95,7 @@ public class StackTraceTreeBuilder {
 
         // get measurement properties
         var methodNames =  sample.getMethodSignatures();
-        var timeTaken = 10;
+        var timeTaken = 1;
         var amountOfSamples = 1;
         var percentageOfSamples = 0;
 
@@ -146,7 +146,8 @@ public class StackTraceTreeBuilder {
         );
 
         StackTraceTreeNode node = new StackTraceTreeNode(callee, new ArrayList<>(), payload);
-        node.getPayload().setInitialWeight(stacktraceTreeModel.getCumulativeWeight());
+        System.out.println(stacktraceTreeModel.getCumulativeWeight());
+        node.setInitialWeight(stacktraceTreeModel.getCumulativeWeight());
 
         var children = stacktraceTreeModel.getChildren();
         List<StackTraceTreeNode> newChildren = new ArrayList<>();
@@ -165,6 +166,27 @@ public class StackTraceTreeBuilder {
             StackTraceTreeNode currentNode = stack.pop();
 
             if(searchable.equals(currentNode)) {
+                return currentNode;
+            }
+
+            for (StackTraceTreeNode child : currentNode.getChildren()) {
+                if (child != null) {
+                    stack.push(child);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static StackTraceTreeNode search(String searchableContent, StackTraceTreeNode tree) {
+        Stack<StackTraceTreeNode> stack = new Stack<>();
+        stack.push(tree);
+
+        while (!stack.isEmpty()) {
+            StackTraceTreeNode currentNode = stack.pop();
+
+            if(currentNode.getPayload().getMethodName().contains(searchableContent)) {
                 return currentNode;
             }
 

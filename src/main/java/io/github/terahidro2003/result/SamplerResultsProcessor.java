@@ -48,7 +48,6 @@ public class SamplerResultsProcessor {
         for (File measurementJfr : jfrs) {
             StacktraceTreeModel localModel = jfrToStacktraceGraph(List.of(measurementJfr));
             StackTraceTreeNode localTree = StackTraceTreeBuilder.buildFromStacktraceTreeModel(localModel);
-            localTree.printTree();
             addLocalMeasurements(tree, localTree, identifier[0]);
         }
 
@@ -65,11 +64,10 @@ public class SamplerResultsProcessor {
 
         while (!stack.isEmpty()) {
             StackTraceTreeNode currentNode = stack.pop();
-            System.out.print(currentNode.getPayload() + " ");
 
             var result = StackTraceTreeBuilder.search(currentNode, bat);
             if (result != null) {
-                result.getPayload().addMeasurement(identifier, localTree.getPayload().getInitialWeight());
+                result.addMeasurement(identifier, currentNode.getInitialWeight());
             }
 
             for (StackTraceTreeNode child : currentNode.getChildren()) {
@@ -141,6 +139,10 @@ public class SamplerResultsProcessor {
         return samples;
     }
 
+    public StackTraceTreeNode filterTestcaseSubtree(String testcase, StackTraceTreeNode bat) {
+        return StackTraceTreeBuilder.search(testcase, bat);
+    }
+
     public File extractSamplesFromJFR(File file, String jsonFileName, Config config) throws IOException {
         log.info("Extracting samples from jfr file {}", file.getName());
 
@@ -152,8 +154,8 @@ public class SamplerResultsProcessor {
         command.add("--json");
         command.add("--categories");
         command.add("JVM");
-//        command.add("--events");
-//        command.add("Profiling");
+        command.add("--events");
+        command.add("Profiling");
         command.add(file.getAbsolutePath());
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
