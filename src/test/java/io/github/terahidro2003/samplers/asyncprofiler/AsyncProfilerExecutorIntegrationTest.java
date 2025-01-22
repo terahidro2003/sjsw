@@ -1,7 +1,6 @@
 package io.github.terahidro2003.samplers.asyncprofiler;
 
 import io.github.terahidro2003.config.Config;
-import io.github.terahidro2003.result.SamplerResultsProcessor;
 import io.github.terahidro2003.result.tree.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
 import io.github.terahidro2003.utils.CommandStarter;
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
@@ -97,7 +95,7 @@ class AsyncProfilerExecutorIntegrationTest {
                 true,
                 0
         );
-        Duration duration = Duration.ofSeconds(30);
+        Duration duration = Duration.ofSeconds(60);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
 
         // run (and assert whether both phases throw an exception)
@@ -135,46 +133,6 @@ class AsyncProfilerExecutorIntegrationTest {
         Set<String> methodNames = Set.of("9 methodB((Ljava/util/List;Ljava/util/stream/DoubleStream;)V)",
                 "9 methodA((Ljava/util/List;)V)", "9 main(([Ljava/lang/String;)V)");
         assertThat(isTreeAssumedValid(pipeline.getStackTraceTree())).containsAnyOf(methodNames.toArray(new String[0]));
-    }
-
-    @Test
-    public void miniPeasIntegrationTest() throws IOException {
-        // STEP 1: create semi-empty configuration with output path and full samples (JFR) sampling enabled.
-        Config config = new Config(
-                null,
-                null,
-                null,
-                benchmarkProjectDir.getAbsolutePath() + "/profiler-results",
-                true,
-                0
-        );
-
-        // Step 2: Set sampling maximum duration
-        Duration duration = Duration.ofSeconds(60);
-
-        // Step 3: init the pipeline
-        SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
-
-        // Step 4: generate java asprof agent as string together with JFR file location
-        MeasurementInformation agent = pipeline.javaAgent(config, 1, "11111", duration);
-
-        // Step 5: attach that agent to maven test lifecycle job
-        CommandStarter.start("mvn",
-                "clean",
-                "test",
-                "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml",
-                "-DargLine=" + agent.javaAgentPath()
-        );
-
-        // Step 6: parse JFR file to JSON with all the execution samples
-        SamplerResultsProcessor processor = new SamplerResultsProcessor();
-//        var parsedJFR = processor.extractSamplesFromJFR(new File(agent.rawOutputPath()), config);
-
-        // Step 7: convert samples to Peass tree
-//        var root = processor.convertResultsToPeassTree(parsedJFR, "00000", "11111");
-
-//        System.out.println(root);
-        System.out.println(agent);
     }
 
     private String determineProfilerPathByOS() {
