@@ -22,4 +22,4 @@ jobs:
     - name: Configure perf
       run: sudo sysctl kernel.perf_event_paranoid=1
     - name: Verify
-      run: mvn -B verify --file pom.xml -Dgpg.skip
+      run: ./mvnw -B verify --file pom.xml -Dgpg.skip
