@@ -1,10 +1,13 @@
-package io.github.terahidro2003.result;
+package io.github.terahidro2003.result.tree;
 
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
+import org.openjdk.jmc.flightrecorder.stacktrace.tree.Node;
+import org.openjdk.jmc.flightrecorder.stacktrace.tree.StacktraceTreeModel;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Stack;
 
 public class StackTraceTreeBuilder {
     private StackTraceTreeNode root;
@@ -14,7 +17,7 @@ public class StackTraceTreeBuilder {
         // since there are calls from GC, and asprof java agent that do not originate from "main" method
         // such "not main" calls have considerable overhead (from 5 to 15%)
         // such situation and its influence on overhead needs to be investigated
-        this.root = new StackTraceTreeNode(null, new ArrayList<>(), "root", 0L, 0.0, 0);
+        this.root = new StackTraceTreeNode(null, new ArrayList<>(), new StackTraceTreePayload("root"));
     }
 
     public StackTraceTreeNode build(List<StackTraceData> organizedSamples) {
@@ -52,7 +55,7 @@ public class StackTraceTreeBuilder {
 
         // We're trying to find whether current parent has our current method as a child
         for(StackTraceTreeNode parentChild : parent.getChildren()) {
-            if (parentChild.getMethodName().equals(current)) {
+            if (parentChild.getPayload().getMethodName().equals(current)) {
                 child = parentChild;
                 break;
             }
@@ -61,14 +64,9 @@ public class StackTraceTreeBuilder {
         // If our current parent node doesn't have our current method name as a child,
         // we assume that this is a new child of the current parent node.
         if(child == null) {
-            child = new StackTraceTreeNode(parent, new ArrayList<>(), methodNames.get(0), 0L, 0.0, 0);
+            child = new StackTraceTreeNode(parent, new ArrayList<>(), new StackTraceTreePayload(methodNames.get(0)));
             parent.getChildren().add(child);
         }
-
-        // Set metrics for a child node
-        child.setTimeTaken(child.getTimeTaken() + timeTaken);
-        child.setPercentageOfTotalTimeTaken(child.getPercentageOfTotalTimeTaken() + percentageOfSamples);
-        child.setTotalNumberOfSamples(child.getTotalNumberOfSamples() + amountOfSamples);
 
         // prepare for recursion
         // we remove the first element in method names list of a sample block (because we processed that node)
@@ -82,6 +80,7 @@ public class StackTraceTreeBuilder {
         samples.forEach(sample -> {
             Collections.reverse(sample.getStackTrace());
         });
+
         samples.forEach(sample -> {
             addExecutionSample(root, sample);
         });
@@ -96,7 +95,7 @@ public class StackTraceTreeBuilder {
 
         // get measurement properties
         var methodNames =  sample.getMethodSignatures();
-        var timeTaken = 10;
+        var timeTaken = 1;
         var amountOfSamples = 1;
         var percentageOfSamples = 0;
 
@@ -112,7 +111,7 @@ public class StackTraceTreeBuilder {
 
         // We're trying to find whether current parent has our current method as a child
         for(StackTraceTreeNode parentChild : parent.getChildren()) {
-            if (parentChild.getMethodName().equals(current)) {
+            if (parentChild.getPayload().getMethodName().equals(current)) {
                 child = parentChild;
                 break;
             }
@@ -121,14 +120,9 @@ public class StackTraceTreeBuilder {
         // If our current parent node doesn't have our current method name as a child,
         // we assume that this is a new child of the current parent node.
         if(child == null) {
-            child = new StackTraceTreeNode(parent, new ArrayList<>(), methodNames.get(0), 0L, 0.0, 0);
+            child = new StackTraceTreeNode(parent, new ArrayList<>(), new StackTraceTreePayload(methodNames.get(0)));
             parent.getChildren().add(child);
         }
-
-        // Set metrics for a child node
-        child.setTimeTaken(child.getTimeTaken() + timeTaken);
-        child.setPercentageOfTotalTimeTaken(child.getPercentageOfTotalTimeTaken() + percentageOfSamples);
-        child.setTotalNumberOfSamples(child.getTotalNumberOfSamples() + amountOfSamples);
 
         // prepare for recursion
         // we remove the first element in method names list of a sample block (because we processed that node)
@@ -137,5 +131,71 @@ public class StackTraceTreeBuilder {
 
         // recursive call
         addExecutionSample(child, sample);
+    }
+
+    public static StackTraceTreeNode buildFromStacktraceTreeModel(StacktraceTreeModel stacktraceTreeModel) {
+        StackTraceTreeNode root = null;
+        var stacktraceRootNode = stacktraceTreeModel.getRoot();
+        root = addNodeFromStacktraceTreeModel(stacktraceRootNode, root);
+        return root;
+    }
+
+    private static StackTraceTreeNode addNodeFromStacktraceTreeModel(Node stacktraceTreeModel, StackTraceTreeNode callee) {
+        StackTraceTreePayload payload = new StackTraceTreePayload(
+                stacktraceTreeModel.getFrame().getMethod().getMethodName()
+        );
+
+        StackTraceTreeNode node = new StackTraceTreeNode(callee, new ArrayList<>(), payload);
+        node.setInitialWeight(stacktraceTreeModel.getCumulativeWeight());
+
+        var children = stacktraceTreeModel.getChildren();
+        List<StackTraceTreeNode> newChildren = new ArrayList<>();
+        for (var child : children) {
+            newChildren.add(addNodeFromStacktraceTreeModel(child, node));
+        }
+        node.children = newChildren;
+        return node;
+    }
+
+    public static StackTraceTreeNode search(StackTraceTreeNode searchable, StackTraceTreeNode tree) {
+        Stack<StackTraceTreeNode> stack = new Stack<>();
+        stack.push(tree);
+
+        while (!stack.isEmpty()) {
+            StackTraceTreeNode currentNode = stack.pop();
+
+            if(searchable.equals(currentNode)) {
+                return currentNode;
+            }
+
+            for (StackTraceTreeNode child : currentNode.getChildren()) {
+                if (child != null) {
+                    stack.push(child);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static StackTraceTreeNode search(String searchableContent, StackTraceTreeNode tree) {
+        Stack<StackTraceTreeNode> stack = new Stack<>();
+        stack.push(tree);
+
+        while (!stack.isEmpty()) {
+            StackTraceTreeNode currentNode = stack.pop();
+
+            if(currentNode.getPayload().getMethodName().contains(searchableContent)) {
+                return currentNode;
+            }
+
+            for (StackTraceTreeNode child : currentNode.getChildren()) {
+                if (child != null) {
+                    stack.push(child);
+                }
+            }
+        }
+
+        return null;
     }
 }

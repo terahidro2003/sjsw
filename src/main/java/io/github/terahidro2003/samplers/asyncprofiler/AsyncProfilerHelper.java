@@ -34,26 +34,34 @@ public class AsyncProfilerHelper {
         return instance == null ? new AsyncProfilerHelper(config, output) : instance;
     }
 
-    public File retrieveRawOutputFile() {
+    public File retrieveRawOutputFile(int vmId, String commit) {
         if (output != null) {
             return this.output;
         }
-        File output = rawProfilerOutput("asprof_results_" + System.currentTimeMillis() + ".json");
+
+        String outputFilePrefix = generateOutputFilePrefix(vmId, commit);
+
+        File output = rawProfilerOutput(outputFilePrefix + ".json");
         if(config.JfrEnabled()) {
-            output = rawProfilerOutput("asprof_results_" + System.currentTimeMillis() + ".jfr");
+            output = rawProfilerOutput(outputFilePrefix + ".jfr");
         }
         this.output = output;
         return output;
     }
 
-    public MeasurementInformation retrieveJavaAgent(Duration duration) {
-        File output = retrieveRawOutputFile();
+    private String generateOutputFilePrefix(int vms, String commit) {
+        return "sjsw_asprof_results_" + System.currentTimeMillis() + "_" + vms + "-" + commit;
+    }
+
+    public MeasurementInformation retrieveJavaAgent(Duration duration, int vmId, String commit) {
+        File output = retrieveRawOutputFile(vmId, commit);
+
         final String asprofAgent;
 
         if(config.frequency() == null || config.frequency() == 0) {
-            asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",interval=10ms,event=wall,clock=monotonic,file=" + output;
+            asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",interval=10ms,cstack=dwarf,event=wall,file=" + output;
         } else {
-            asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.frequency() + "ms,timeout=" + duration.getSeconds() + ",event=wall,clock=monotonic,file=" + output;
+            asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.frequency() + "ms,timeout=" + duration.getSeconds() + ",cstack=dwarf,event=wall,file=" + output;
         }
         return new MeasurementInformation(output.getAbsolutePath(), asprofAgent);
     }

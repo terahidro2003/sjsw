@@ -52,6 +52,7 @@ public class ExecutionSample {
     }
 
     public static List<ExecutionSample> parseJson(String filePath) throws IOException {
+        log.info("Deserializing {}", filePath);
         ObjectMapper mapper = Constants.OBJECT_MAPPER;
         var serializedMap = mapper.readValue(new File(filePath), new TypeReference<HashMap<String, Object>>() {});
         List<ExecutionSample> samples = new ArrayList<ExecutionSample>();
@@ -124,7 +125,17 @@ public class ExecutionSample {
                                             method.setLineNumber(Integer.parseInt(propertyFromMapAsString((Map<?, ?>) frameMap, "lineNumber")));
                                             method.setByteCodeIndex(Integer.parseInt(propertyFromMapAsString((Map<?, ?>) frameMap, "bytecodeIndex")));
                                             method.setType(propertyFromMapAsString((Map<?, ?>) frameMap, "type"));
-                                            methods.add(method);
+
+                                            if (method.getType() != null
+                                                    &&
+                                                    (method.getType().contains("Native") ||
+                                                    method.getType().contains("native") || method.getType().contains("C++")
+                                                    || method.getType().contains("c++")
+                                            )) {
+//                                                log.info("Skipping native method " + method);
+                                            } else {
+                                                methods.add(method);
+                                            }
                                         }
                                     });
                                 }
