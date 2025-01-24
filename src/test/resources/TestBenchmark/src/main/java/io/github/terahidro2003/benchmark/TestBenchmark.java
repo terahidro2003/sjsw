@@ -15,7 +15,7 @@ public class TestBenchmark {
         for (int i = 0; i <= 1000; i++) {
             Random r = new Random();
             methodB(list, r.doubles(i));
-            Thread.sleep(10);
+            Thread.sleep(80);
         }
     }
 
