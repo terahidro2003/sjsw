@@ -6,7 +6,7 @@
 
     <groupId>io.github.terahidro2003</groupId>
     <artifactId>sjsw</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
 
     <packaging>jar</packaging>
 
@@ -90,13 +90,6 @@
             <artifactId>assertj-core</artifactId>
             <version>3.26.3</version>
             <scope>test</scope>
-        </dependency>
-
-        <!--        Peass dependencies-->
-        <dependency>
-            <groupId>de.dagere.peass</groupId>
-            <artifactId>measurement</artifactId>
-            <version>0.4.0</version>
         </dependency>
 
         <dependency>

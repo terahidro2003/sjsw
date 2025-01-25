@@ -4,7 +4,6 @@ import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.result.tree.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
 import io.github.terahidro2003.utils.CommandStarter;
-import groovy.util.logging.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -18,7 +17,6 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Slf4j
 class AsyncProfilerExecutorIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutorIntegrationTest.class);

@@ -1,6 +1,5 @@
 package io.github.terahidro2003.samplers.asyncprofiler;
 
-import groovy.util.logging.Slf4j;
 import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.result.SamplerResultsProcessor;
 import io.github.terahidro2003.result.tree.StackTraceTreeNode;
@@ -15,7 +14,6 @@ import java.util.List;
 
 import static io.github.terahidro2003.samplers.asyncprofiler.TestConstants.*;
 
-@Slf4j
 public class PeassIntegrationTest {
 
     @Test

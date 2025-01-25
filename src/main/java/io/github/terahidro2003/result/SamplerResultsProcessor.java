@@ -1,6 +1,5 @@
 package io.github.terahidro2003.result;
 
-import groovy.util.logging.Slf4j;
 import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.result.tree.StackTraceTreeBuilder;
 import io.github.terahidro2003.result.tree.StackTraceTreeNode;
@@ -25,7 +24,6 @@ import java.util.Stack;
 
 import static io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerExecutor.log;
 
-@Slf4j
 public class SamplerResultsProcessor {
 
     public StacktraceTreeModel jfrToStacktraceGraph(List<File> jfrs) {

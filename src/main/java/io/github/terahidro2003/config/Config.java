@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.github.terahidro2003.utils.FileUtils;
-import groovy.util.logging.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +14,6 @@ import java.nio.file.Files;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
-@Slf4j
 public record Config(String executable, String mainClass, String profilerPath, String outputPath, Boolean JfrEnabled, Integer frequency) implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);

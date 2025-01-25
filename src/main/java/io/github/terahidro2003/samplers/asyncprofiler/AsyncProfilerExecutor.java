@@ -12,9 +12,6 @@ import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
 import io.github.terahidro2003.utils.CommandStarter;
 import io.github.terahidro2003.utils.FileUtils;
-import de.dagere.peass.config.MeasurementConfig;
-import de.dagere.peass.measurement.rca.data.CallTreeNode;
-import groovy.util.logging.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-@Slf4j
 public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
     public static final Logger log = LoggerFactory.getLogger(AsyncProfilerExecutor.class);
@@ -136,9 +132,6 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
             root = tree;
             tree.printTree();
         }
-
-        CallTreeNode callTreeNode = null;
-        toPeasDS(root, callTreeNode, vms, commit, oldCommit);
     }
 
     private void execute(Thread workload, Config config, Duration duration) throws InterruptedException, IOException {
@@ -178,58 +171,6 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     private StackTraceTreeNode generateTree(List<StackTraceData> samples) {
         StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
         return stackTraceTreeBuilder.build(samples);
-    }
-
-    private void toPeasDS(StackTraceTreeNode node, CallTreeNode peasNode, int vms, String commit, String oldCommit) {
-        if (commit == null && oldCommit == null) {
-            log.error("Failed to build Peass tree structure. One of the commits have to be supplied, none were.");
-            return;
-        }
-
-        MeasurementConfig measurementConfig = new MeasurementConfig(vms, commit, oldCommit);
-
-        if(peasNode == null) {
-            String methodNameWithNew = node.getPayload().getMethodName() + "()";
-            if(node.getPayload().getMethodName().contains("<init>")) {
-                methodNameWithNew = "new " + node.getPayload().getMethodName() + "()";
-            }
-            peasNode = new CallTreeNode(node.getPayload().getMethodName(),
-                    methodNameWithNew,
-                    methodNameWithNew,
-                    measurementConfig);
-
-            createPeassNode(node, peasNode, commit, oldCommit);
-        } else {
-            createPeassNode(node, peasNode, commit, oldCommit);
-            peasNode = peasNode.getChildByKiekerPattern(node.getPayload().getMethodName() + "()");
-        }
-
-        List<StackTraceTreeNode> children = node.getChildren();
-        for (StackTraceTreeNode child : children) {
-            toPeasDS(child, peasNode, vms, commit, oldCommit);
-        }
-    }
-
-    private void createPeassNode(StackTraceTreeNode node, CallTreeNode peasNode, String commit, String oldCommit) {
-        peasNode.initCommitData();
-        peasNode.initVMData(commit);
-//        peasNode.addMeasurement(commit, node.getTimeTaken());
-
-        // check is done as a workaround for Peass kieker pattern check
-        if(node.getPayload().getMethodName().contains("<init>")) {
-            String methodNameWithNew = "new " + node.getPayload().getMethodName() + "()";
-            peasNode.appendChild(node.getPayload().getMethodName(),
-                    methodNameWithNew,
-                    methodNameWithNew
-            );
-        } else {
-            peasNode.appendChild(node.getPayload().getMethodName(),
-                    node.getPayload().getMethodName() + "()",
-                    node.getPayload().getMethodName() + "()"
-            );
-        }
-
-        peasNode.createStatistics(commit);
     }
 
     private Thread getBenchmarkThread(Config config, Duration duration, File output) {
