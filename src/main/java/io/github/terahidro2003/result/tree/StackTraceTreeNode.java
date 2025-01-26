@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 public class StackTraceTreeNode {
+    private final List<String> parentMethodNames = new ArrayList<>();
+
     private StackTraceTreeNode parent;
     List<StackTraceTreeNode> children;
     private StackTraceTreePayload payload;
@@ -17,6 +19,11 @@ public class StackTraceTreeNode {
         this.parent = parent;
         this.children = children;
         this.payload = payload;
+
+        if(parent != null) {
+            this.parentMethodNames.addAll(parent.parentMethodNames);
+        }
+        this.parentMethodNames.add(this.payload.getMethodName());
     }
 
     public StackTraceTreePayload getPayload() {
@@ -83,9 +90,14 @@ public class StackTraceTreeNode {
             if (this.getPayload() != null && other.getPayload() != null) {
                 var payload = this.getPayload();
                 var otherPayload = other.getPayload();
-                if (payload.getMethodName().equals(otherPayload.getMethodName())) {
-                    return true;
+
+                if(!payload.getMethodName().equals(otherPayload.getMethodName())) {
+                    return false;
                 }
+
+                List<String> o1 = other.parentMethodNames;
+                List<String> o2 = this.parentMethodNames;
+                return o1.equals(o2);
             }
         }
         return false;
