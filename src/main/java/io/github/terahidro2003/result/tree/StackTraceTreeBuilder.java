@@ -1,8 +1,12 @@
 package io.github.terahidro2003.result.tree;
 
+import io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerExecutor;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
+import org.openjdk.jmc.flightrecorder.stacktrace.tree.AggregatableFrame;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.Node;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.StacktraceTreeModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +14,7 @@ import java.util.List;
 import java.util.Stack;
 
 public class StackTraceTreeBuilder {
+    public static final Logger log = LoggerFactory.getLogger(StackTraceTreeBuilder.class);
     private StackTraceTreeNode root;
 
     public StackTraceTreeBuilder() {
@@ -141,9 +146,21 @@ public class StackTraceTreeBuilder {
     }
 
     private static StackTraceTreeNode addNodeFromStacktraceTreeModel(Node stacktraceTreeModel, StackTraceTreeNode callee) {
+        AggregatableFrame frame = stacktraceTreeModel.getFrame();
         StackTraceTreePayload payload = new StackTraceTreePayload(
-                stacktraceTreeModel.getFrame().getHumanReadableSeparatorSensitiveString()
+                frame.getHumanReadableSeparatorSensitiveString()
         );
+
+        String methodName = frame.getMethod().getMethodName();
+        Boolean isHidden = frame.getMethod().isHidden();
+        if(isHidden == null) isHidden = false;
+
+        if (methodName == null || methodName.isEmpty() || isHidden) {
+            log.info("Attempting to exclude an empty node");
+            if (!stacktraceTreeModel.isRoot()) {
+                return null;
+            }
+        }
 
         StackTraceTreeNode node = new StackTraceTreeNode(callee, new ArrayList<>(), payload);
         node.setInitialWeight(stacktraceTreeModel.getCumulativeWeight());
@@ -151,7 +168,10 @@ public class StackTraceTreeBuilder {
         var children = stacktraceTreeModel.getChildren();
         List<StackTraceTreeNode> newChildren = new ArrayList<>();
         for (var child : children) {
-            newChildren.add(addNodeFromStacktraceTreeModel(child, node));
+            StackTraceTreeNode childNode = addNodeFromStacktraceTreeModel(child, node);
+            if (child != null && childNode != null) {
+                newChildren.add(childNode);
+            }
         }
         node.children = newChildren;
         return node;
