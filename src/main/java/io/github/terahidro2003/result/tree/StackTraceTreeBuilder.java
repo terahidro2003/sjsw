@@ -142,7 +142,7 @@ public class StackTraceTreeBuilder {
 
     private static StackTraceTreeNode addNodeFromStacktraceTreeModel(Node stacktraceTreeModel, StackTraceTreeNode callee) {
         StackTraceTreePayload payload = new StackTraceTreePayload(
-                stacktraceTreeModel.getFrame().getMethod().getMethodName()
+                stacktraceTreeModel.getFrame().getHumanReadableSeparatorSensitiveString()
         );
 
         StackTraceTreeNode node = new StackTraceTreeNode(callee, new ArrayList<>(), payload);
