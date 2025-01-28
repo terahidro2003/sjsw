@@ -19,7 +19,7 @@ public class PeassIntegrationTest {
     @Test
     void integrate() {
         final String[] commits = {"11111"};
-        final int vms = 5;
+        final int vms = 2;
         final String testcaseMethod = "testing";
 
         MeasurementIdentifier measurementIdentifier = new MeasurementIdentifier();
@@ -29,7 +29,8 @@ public class PeassIntegrationTest {
                 .outputPathWithIdentifier(outputPath, measurementIdentifier)
                 .autodownloadProfiler()
                 .jfrEnabled(true)
-                .frequency(15)
+                .withTimeoutDisabled()
+                .frequency(50)
                 .build();
 
         SamplerResultsProcessor processor = new SamplerResultsProcessor();

@@ -37,7 +37,8 @@ class AsyncProfilerExecutorIntegrationTest {
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
                 false,
-                0
+                0,
+                false
         );
         Duration duration = Duration.ofSeconds(30);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
@@ -64,7 +65,8 @@ class AsyncProfilerExecutorIntegrationTest {
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
                 false,
-                0
+                0,
+                false
         );
         Duration duration = Duration.ofSeconds(30);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
@@ -91,7 +93,8 @@ class AsyncProfilerExecutorIntegrationTest {
                 determineProfilerPathByOS(),
                 MEASUREMENTS_PATH,
                 true,
-                0
+                0,
+                false
         );
         Duration duration = Duration.ofSeconds(60);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
@@ -118,7 +121,8 @@ class AsyncProfilerExecutorIntegrationTest {
                 "",
                 MEASUREMENTS_PATH,
                 true,
-                0
+                0,
+                false
         );
         Duration duration = Duration.ofSeconds(30);
         SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();

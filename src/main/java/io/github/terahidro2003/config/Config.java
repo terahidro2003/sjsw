@@ -14,7 +14,7 @@ import java.nio.file.Files;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
-public record Config(String executable, String mainClass, String profilerPath, String outputPath, Boolean JfrEnabled, Integer frequency) implements Serializable {
+public record Config(String executable, String mainClass, String profilerPath, String outputPath, Boolean JfrEnabled, Integer frequency, Boolean timeoutDisabled) implements Serializable {
 
     private static final Logger log = LoggerFactory.getLogger(Config.class);
 
@@ -36,7 +36,7 @@ public record Config(String executable, String mainClass, String profilerPath, S
         if(!config.executable.contains(".jar") && config.executable.contains(".txt")) {
             try {
                 String classPath = FileUtils.readFileToString(config.executable);
-                return new Config(classPath, config.mainClass, config.profilerPath, config.outputPath, config.JfrEnabled, config.frequency);
+                return new Config(classPath, config.mainClass, config.profilerPath, config.outputPath, config.JfrEnabled, config.frequency, false);
             } catch (IOException e) {
                 return config;
             }
@@ -46,7 +46,7 @@ public record Config(String executable, String mainClass, String profilerPath, S
     }
 
     public static Config clone(Config config, String outputPath) {
-        return new Config(config.executable(), config.mainClass, config.profilerPath, outputPath, config.JfrEnabled, config.frequency);
+        return new Config(config.executable(), config.mainClass, config.profilerPath, outputPath, config.JfrEnabled, config.frequency, false);
     }
 
     private boolean hasValidProfilerExecutable() {

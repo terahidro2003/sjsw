@@ -279,7 +279,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
             }
             String profilerPath = FileUtils.retrieveAsyncProfilerExecutable(folder.toPath());
             log.warn("Downloaded profiler path: {}", profilerPath);
-            return new Config(config.executable(), config.mainClass(), profilerPath, config.outputPath(), config.JfrEnabled(), config.frequency());
+            return new Config(config.executable(), config.mainClass(), profilerPath, config.outputPath(), config.JfrEnabled(), config.frequency(), false);
         }
         return config;
     }

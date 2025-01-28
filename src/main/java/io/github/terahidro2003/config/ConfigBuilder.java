@@ -11,9 +11,10 @@ public class ConfigBuilder {
     private String outputPath;
     private Boolean JfrEnabled;
     private Integer frequency;
+    private Boolean timeoutDisabled = true;
 
     public ConfigBuilder() {
-        this.config = new Config(null, null, null, null, false, 0);
+        this.config = new Config(null, null, null, null, false, 0, false);
     }
 
     public ConfigBuilder executable(String executable) {
@@ -41,6 +42,12 @@ public class ConfigBuilder {
         return this;
     }
 
+    public ConfigBuilder withTimeoutDisabled() {
+        this.timeoutDisabled = true;
+        return this;
+    }
+
+
     public ConfigBuilder outputPathWithIdentifier(String outputPath, MeasurementIdentifier identifier) {
         this.outputPath = outputPath + "/measurement_" + identifier.getUuid().toString();
         return this;
@@ -63,7 +70,8 @@ public class ConfigBuilder {
                 this.profilerPath,
                 this.outputPath,
                 this.JfrEnabled,
-                this.frequency
+                this.frequency,
+                this.timeoutDisabled
         );
         return config1;
     }
