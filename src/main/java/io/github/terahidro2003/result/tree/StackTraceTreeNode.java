@@ -39,20 +39,18 @@ public class StackTraceTreeNode {
     }
 
     private void printTreeRecursive(StackTraceTreeNode node, String prefix, boolean isLast) {
-        if (node.getPayload().getMethodName() != null) {
-            var measurementsList = node.getMeasurements();
-            final StringBuilder measurementsAsString = new StringBuilder();
-            measurementsList.forEach((k,v) -> {
-                v.forEach(value -> {
-                    measurementsAsString.append(value);
-                    measurementsAsString.append(",");
-                });
+        var measurementsList = node.getMeasurements();
+        final StringBuilder measurementsAsString = new StringBuilder();
+        measurementsList.forEach((k,v) -> {
+            v.forEach(value -> {
+                measurementsAsString.append(value);
+                measurementsAsString.append(",");
             });
+        });
 
-            System.out.println(prefix + (isLast ? "└────── " : "├────── ") + node.getPayload().getMethodName() +
-                    " [Measurements: { " + measurementsAsString.toString() + " }]" +
-                    ", cWeight: " + this.initialWeight);
-        }
+        System.out.println(prefix + (isLast ? "└────── " : "├────── ") + node.getPayload().getMethodName() +
+                " [Measurements: { " + measurementsAsString.toString() + " }]" +
+                ", cWeight: " + this.initialWeight);
 
         List<StackTraceTreeNode> children = node.getChildren();
         for (int i = 0; i < children.size(); i++) {
