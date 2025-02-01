@@ -33,6 +33,31 @@ public class PeassIntegrationTest {
                 .frequency(50)
                 .build();
 
+        measure(vms, commits, config, measurementIdentifier, outputPath, testcaseMethod);
+    }
+
+    @Test
+    void integrateIntensive() {
+        final String[] commits = {"11111"};
+        final int vms = 20;
+        final String testcaseMethod = "testing";
+
+        MeasurementIdentifier measurementIdentifier = new MeasurementIdentifier();
+        String outputPath = benchmarkProjectDir.getAbsolutePath() + "/profiler-results";
+
+        Config config = Config.builder()
+                .outputPathWithIdentifier(outputPath, measurementIdentifier)
+                .autodownloadProfiler()
+                .jfrEnabled(true)
+                .withTimeoutDisabled()
+                .frequency(10)
+                .build();
+
+        measure(vms, commits, config, measurementIdentifier, outputPath, testcaseMethod);
+    }
+
+    private void measure(int vms, String[] commits, Config config, MeasurementIdentifier measurementIdentifier,
+                         String outputPath, String testcaseMethod) {
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
 
         // Measure
@@ -41,7 +66,9 @@ public class PeassIntegrationTest {
             for (int j = 0; j < commits.length; j++) {
                 log.info("Testing commit {}", commits[j]);
                 emulateRunOnce(config, i, commits[j]);
+                log.info("Commit {} measurement completed.", commits[j]);
             }
+            log.info("Finished VM {}", i);
         }
 
 
@@ -54,6 +81,9 @@ public class PeassIntegrationTest {
             List<File> commitJfrs = processor.listJfrMeasurementFiles(resultsPath, List.of(commits[i]));
             StackTraceTreeNode tree = processor.getTreeFromJfr(commitJfrs, commits[i]);
             StackTraceTreeNode filteredTestcaseTree = processor.filterTestcaseSubtree(testcaseMethod, tree);
+
+            System.out.println();
+            System.out.println("FILTERED TREE:");
             filteredTestcaseTree.printTree();
         }
     }
