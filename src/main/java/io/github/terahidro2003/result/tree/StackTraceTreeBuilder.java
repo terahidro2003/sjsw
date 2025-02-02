@@ -1,6 +1,5 @@
 package io.github.terahidro2003.result.tree;
 
-import io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerExecutor;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.AggregatableFrame;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.Node;
@@ -8,10 +7,7 @@ import org.openjdk.jmc.flightrecorder.stacktrace.tree.StacktraceTreeModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class StackTraceTreeBuilder {
     public static final Logger log = LoggerFactory.getLogger(StackTraceTreeBuilder.class);
@@ -217,5 +213,102 @@ public class StackTraceTreeBuilder {
         }
 
         return null;
+    }
+
+    public static StackTraceTreeNode search(List<String> searchableContent, StackTraceTreeNode tree) {
+        Stack<StackTraceTreeNode> stack = new Stack<>();
+        stack.push(tree);
+
+        while (!stack.isEmpty()) {
+            StackTraceTreeNode currentNode = stack.pop();
+
+            if(currentNode.getParentMethodNames().equals(searchableContent)) {
+                return currentNode;
+            }
+
+            for (StackTraceTreeNode child : currentNode.getChildren()) {
+                if (child != null) {
+                    stack.push(child);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public List<StackTraceTreeNode> filterMultiple(String searchableContent,
+                                                          StackTraceTreeNode tree,
+                                                          Boolean strict) {
+        List<StackTraceTreeNode> filteredSubtrees = new ArrayList<>();
+        Stack<StackTraceTreeNode> stack = new Stack<>();
+        stack.push(tree);
+
+        while (!stack.isEmpty()) {
+            StackTraceTreeNode currentNode = stack.pop();
+
+            if(currentNode.getPayload().getMethodName().contains(searchableContent) && !strict) {
+                filteredSubtrees.add(currentNode);
+            }
+
+            for (StackTraceTreeNode child : currentNode.getChildren()) {
+                if (child != null) {
+                    stack.push(child);
+                }
+            }
+        }
+
+        return filteredSubtrees;
+    }
+
+    public StackTraceTreeNode filterJvmNodes(StackTraceTreeNode root) {
+        List<String> exclude = List.of(
+                "libjvm.so",
+                "JVM_SLEEP",
+                "PlatformEvent::",
+                "::PlatformEvent",
+                "libc.so"
+        );
+        return filterJvmNodesRecursive(root, exclude);
+    }
+
+    public StackTraceTreeNode filterJvmNodesRecursive(StackTraceTreeNode callee, List<String> exclude) {
+        for (var toExclude : exclude) {
+            if(callee.getPayload().getMethodName().contains(toExclude))
+            {
+                return null;
+            }
+        }
+
+        var children = callee.getChildren();
+        List<StackTraceTreeNode> newChildren = new ArrayList<>();
+        for (var child : children) {
+            StackTraceTreeNode childNode = filterJvmNodesRecursive(child, exclude);
+            if (child != null && childNode != null) {
+                newChildren.add(childNode);
+            }
+        }
+        callee.children = newChildren;
+        return callee;
+    }
+
+    public static StackTraceTreeNode mergeTrees(StackTraceTreeNode rootA, StackTraceTreeNode rootB) {
+        if (rootA == null) return rootB;
+        if (rootB == null) return rootA;
+
+        if (!rootA.getPayload().getMethodName().equals(rootB.getPayload().getMethodName())) {
+            throw new IllegalArgumentException("Root nodes must have equivalent method signature to be merged.");
+        }
+
+        Map<String, StackTraceTreeNode> mergedChildren = new HashMap<>();
+        for (StackTraceTreeNode child : rootA.getChildren()) {
+            mergedChildren.put(child.getPayload().getMethodName(), child);
+        }
+
+        for (StackTraceTreeNode child : rootB.getChildren()) {
+            mergedChildren.merge(child.getPayload().getMethodName(), child, StackTraceTreeBuilder::mergeTrees);
+        }
+
+        rootA.children = new ArrayList<>(mergedChildren.values());
+        return rootA;
     }
 }
