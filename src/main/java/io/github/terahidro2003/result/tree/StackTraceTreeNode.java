@@ -81,6 +81,10 @@ public class StackTraceTreeNode {
         this.measurements = measurements;
     }
 
+    public List<String> getParentMethodNames() {
+        return parentMethodNames;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof StackTraceTreeNode) {
