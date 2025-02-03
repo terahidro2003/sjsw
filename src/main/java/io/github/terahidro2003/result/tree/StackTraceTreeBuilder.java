@@ -363,6 +363,10 @@ public class StackTraceTreeBuilder {
         if (!mergedChildren.containsKey(node2.getPayload().getMethodName())) {
             mergedChildren.put(node2.getPayload().getMethodName(), node2);
         }
+
+        if(node1.getPayload().getMethodName().equals(node2.getPayload().getMethodName())) {
+            node1.setInitialWeight(node1.getInitialWeight() + node2.getInitialWeight());
+        }
     }
 
     private static void removeMeasurements(StackTraceTreeNode root) {
