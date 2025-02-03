@@ -39,15 +39,9 @@ public class SamplerResultsProcessor {
         }
     }
 
-    public StackTraceTreeNode getTreeFromJfr(List<File> jfrs, String... identifier) {
+    public StackTraceTreeNode getTreeFromJfr(List<File> jfrs) {
         StacktraceTreeModel model = jfrToStacktraceGraph(jfrs);
         StackTraceTreeNode tree = StackTraceTreeBuilder.buildFromStacktraceTreeModel(model);
-
-        for (File measurementJfr : jfrs) {
-            StacktraceTreeModel localModel = jfrToStacktraceGraph(List.of(measurementJfr));
-            StackTraceTreeNode localTree = StackTraceTreeBuilder.buildFromStacktraceTreeModel(localModel);
-            addLocalMeasurements(tree, localTree, identifier[0]);
-        }
 
         return tree;
     }

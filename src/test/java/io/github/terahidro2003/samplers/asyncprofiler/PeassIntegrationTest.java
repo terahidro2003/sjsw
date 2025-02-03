@@ -79,7 +79,7 @@ public class PeassIntegrationTest {
 
             // Build BAT
             List<File> commitJfrs = processor.listJfrMeasurementFiles(resultsPath, List.of(commits[i]));
-            StackTraceTreeNode tree = processor.getTreeFromJfr(commitJfrs, commits[i]);
+            StackTraceTreeNode tree = processor.getTreeFromJfr(commitJfrs);
             StackTraceTreeNode filteredTestcaseTree = processor.filterTestcaseSubtree(testcaseMethod, tree);
 
             System.out.println();
