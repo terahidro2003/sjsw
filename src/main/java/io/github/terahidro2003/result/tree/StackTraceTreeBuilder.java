@@ -1,5 +1,6 @@
 package io.github.terahidro2003.result.tree;
 
+import io.github.terahidro2003.result.SamplerResultsProcessor;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.AggregatableFrame;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.Node;
@@ -7,6 +8,7 @@ import org.openjdk.jmc.flightrecorder.stacktrace.tree.StacktraceTreeModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.*;
 
 public class StackTraceTreeBuilder {
@@ -440,5 +442,44 @@ public class StackTraceTreeBuilder {
                 }
             }
         }
+    }
+
+    public StackTraceTreeNode buildTree(List<File> jfrs, String commit, int vms, String testcase) {
+        if (jfrs.isEmpty()) {
+            throw new RuntimeException("JFR files cannot be empty");
+        }
+
+        jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit)).toList();
+
+        SamplerResultsProcessor processor = new SamplerResultsProcessor();
+        StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
+        List<StackTraceTreeNode> vmTrees = new LinkedList<>();
+        for (int i = 0; i<vms; i++) {
+            StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
+            vmTrees.add(vmTree);
+        }
+        // filters out common JVM and native method call nodes from all retrieved subtrees
+        vmTrees = vmTrees.stream().map(builder::filterJvmNodes).toList();
+        vmTrees.forEach(tree -> {
+            System.out.println();
+            tree.printTree();
+            System.out.println();
+        });
+
+        Map<List<String>, List<Double>> measurementsMap = builder.createMeasurementsMap(vmTrees, testcase);
+        StackTraceTreeNode mergedTree = StackTraceTreeBuilder.mergeTrees(vmTrees);
+
+        builder.addLocalMeasurements(mergedTree, measurementsMap, "11111");
+        return mergedTree;
+    }
+
+    public StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
+        StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr));
+
+        StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
+
+        // retrieves subtrees that share the same parent node
+        List<StackTraceTreeNode> filteredSubtrees = builder.filterMultiple(testcase, bat, false);
+        return StackTraceTreeBuilder.mergeTrees(filteredSubtrees);
     }
 }
