@@ -266,7 +266,8 @@ public class StackTraceTreeBuilder {
                 "JVM_SLEEP",
                 "PlatformEvent::",
                 "::PlatformEvent",
-                "libc.so"
+                "libc.so",
+                "jdk.internal"
         );
         return filterJvmNodesRecursive(root, exclude);
     }
