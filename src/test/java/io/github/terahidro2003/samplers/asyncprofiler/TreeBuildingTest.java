@@ -51,44 +51,15 @@ public class TreeBuildingTest {
     public void testMoreVms() {
         String testcase = "testMe()";
         List<File> jfrs = new ArrayList<>();
-        for (int i = 3; i < 8; i++) {
-            jfrs.add(new File(resourcesDir + "/" + i + ".jfr"));
+        for (int i = 1; i < 6; i++) {
+            jfrs.add(new File(resourcesDir + "/1111_" + i + ".jfr"));
         }
 
-        SamplerResultsProcessor processor = new SamplerResultsProcessor();
         StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
-        List<StackTraceTreeNode> vmTrees = new LinkedList<>();
-        for (int i = 0; i<5; i++) {
-            StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
-            vmTrees.add(vmTree);
-        }
-
-        // filters out common JVM and native method call nodes from all retrieved subtrees
-        vmTrees = vmTrees.stream().map(builder::filterJvmNodes).toList();
-        vmTrees.forEach(tree -> {
-            System.out.println();
-            tree.printTree();
-            System.out.println();
-        });
-
-        Map<List<String>, List<Double>> measurementsMap = builder.createMeasurementsMap(vmTrees, testcase);
-        StackTraceTreeNode mergedTree = StackTraceTreeBuilder.mergeTrees(vmTrees);
-
-        builder.addLocalMeasurements(mergedTree, measurementsMap, "11111");
+        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 5, testcase);
 
         System.out.println();
         System.out.println();
         mergedTree.printTree();
     }
-
-    public StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
-        StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr));
-
-        StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
-
-        // retrieves subtrees that share the same parent node
-        List<StackTraceTreeNode> filteredSubtrees = builder.filterMultiple(testcase, bat, false);
-        return StackTraceTreeBuilder.mergeTrees(filteredSubtrees);
-    }
-
 }
