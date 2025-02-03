@@ -291,24 +291,149 @@ public class StackTraceTreeBuilder {
         return callee;
     }
 
-    public static StackTraceTreeNode mergeTrees(StackTraceTreeNode rootA, StackTraceTreeNode rootB) {
-        if (rootA == null) return rootB;
-        if (rootB == null) return rootA;
+    public static StackTraceTreeNode mergeTrees(List<StackTraceTreeNode> trees) {
+        if (trees == null || trees.isEmpty()) {
+            return null;
+        }
 
-        if (!rootA.getPayload().getMethodName().equals(rootB.getPayload().getMethodName())) {
-            throw new IllegalArgumentException("Root nodes must have equivalent method signature to be merged.");
+        if (trees.size() == 1) {
+            return trees.get(0);
+        }
+
+        StackTraceTreeNode firstTree = trees.get(0);
+        if (firstTree == null) {
+            throw new RuntimeException("First tree cannot be null");
+        }
+
+        List<String> rootSignatures = new ArrayList<>();
+        for (StackTraceTreeNode tree : trees) {
+            rootSignatures.add(tree.getPayload().getMethodName());
+        }
+        String previousSignature = rootSignatures.get(0);
+        for (String signature : rootSignatures) {
+            if(!previousSignature.equals(signature)) {
+                throw new RuntimeException("Trees cannot be merged. Root node signatures are not equal.");
+            }
+            previousSignature = signature;
         }
 
         Map<String, StackTraceTreeNode> mergedChildren = new HashMap<>();
-        for (StackTraceTreeNode child : rootA.getChildren()) {
+        for (StackTraceTreeNode child : firstTree.getChildren()) {
             mergedChildren.put(child.getPayload().getMethodName(), child);
         }
 
-        for (StackTraceTreeNode child : rootB.getChildren()) {
-            mergedChildren.merge(child.getPayload().getMethodName(), child, StackTraceTreeBuilder::mergeTrees);
+        for (StackTraceTreeNode tree : trees) {
+            for (StackTraceTreeNode child : tree.getChildren()) {
+                for (StackTraceTreeNode firstChild : firstTree.getChildren()) {
+                    merge(firstChild, child, mergedChildren);
+                }
+            }
         }
 
-        rootA.children = new ArrayList<>(mergedChildren.values());
-        return rootA;
+        firstTree.children = new ArrayList<>(mergedChildren.values());
+        return firstTree;
+    }
+
+    private static void merge(StackTraceTreeNode node1, StackTraceTreeNode node2,
+                              Map<String, StackTraceTreeNode> mergedChildren) {
+        if (mergedChildren == null) {
+            throw new RuntimeException("Merged children map cannot be null");
+        }
+
+        if (node1 == null || node2 == null) {
+            throw new RuntimeException("One or both of the root nodes were null");
+        }
+
+        removeMeasurements(node1);
+        removeMeasurements(node2);
+
+        if (mergedChildren.containsKey(node1.getPayload().getMethodName())) {
+            mergedChildren.put(node1.getPayload().getMethodName(), node1);
+        }
+
+        if (mergedChildren.containsKey(node2.getPayload().getMethodName())) {
+            mergedChildren.put(node2.getPayload().getMethodName(), node2);
+        }
+
+        if (!mergedChildren.containsKey(node1.getPayload().getMethodName())) {
+            mergedChildren.put(node1.getPayload().getMethodName(), node1);
+        }
+
+        if (!mergedChildren.containsKey(node2.getPayload().getMethodName())) {
+            mergedChildren.put(node2.getPayload().getMethodName(), node2);
+        }
+    }
+
+    private static void removeMeasurements(StackTraceTreeNode root) {
+        Stack<StackTraceTreeNode> stack = new Stack<>();
+        stack.push(root);
+
+        while (!stack.isEmpty()) {
+            StackTraceTreeNode currentNode = stack.pop();
+
+            currentNode.setMeasurements(new HashMap<>());
+
+            for (StackTraceTreeNode child : currentNode.getChildren()) {
+                if (child != null) {
+                    stack.push(child);
+                }
+            }
+        }
+    }
+
+    public Map<List<String>, List<Double>> createMeasurementsMap(List<StackTraceTreeNode> localTrees,
+                                                                  String testcaseSignature) {
+        Map<List<String>, List<Double>> measurementsMap = new HashMap<>();
+        for (StackTraceTreeNode localTree : localTrees) {
+
+            Stack<StackTraceTreeNode> stack = new Stack<>();
+            stack.push(localTree);
+
+            while (!stack.isEmpty()) {
+                StackTraceTreeNode currentNode = stack.pop();
+
+                List<String> parentSignatures = currentNode.getParentMethodNames();
+                List<String> signaturesToRemove = new ArrayList<>();
+                for (int i = 0; i < parentSignatures.size(); i++) {
+                    if(parentSignatures.get(i).contains(testcaseSignature)) {
+                        break;
+                    } else {
+                        signaturesToRemove.add(parentSignatures.get(i));
+                    }
+                }
+                parentSignatures.removeAll(signaturesToRemove);
+
+                if (!measurementsMap.containsKey(parentSignatures)) {
+                    measurementsMap.put(parentSignatures, new ArrayList<>());
+                    currentNode.setMeasurements(new HashMap<>());
+                }
+                measurementsMap.get(parentSignatures).add(currentNode.getInitialWeight());
+
+                for (StackTraceTreeNode child : currentNode.getChildren()) {
+                    if (child != null) {
+                        stack.push(child);
+                    }
+                }
+            }
+        }
+        return measurementsMap;
+    }
+
+    public void addLocalMeasurements(StackTraceTreeNode bat, Map<List<String>, List<Double>> measurementsMap, String identifier) {
+        if (bat == null || measurementsMap == null) {
+            throw new IllegalArgumentException("BAT and measurements map cannot be null");
+        }
+
+        for (Map.Entry<List<String>, List<Double>> entry : measurementsMap.entrySet()) {
+            List<String> signatures = entry.getKey();
+            List<Double> weights = entry.getValue();
+
+            var result = StackTraceTreeBuilder.search(signatures, bat);
+            if (result != null) {
+                for (double weight : weights) {
+                    result.addMeasurement(identifier, weight);
+                }
+            }
+        }
     }
 }
