@@ -373,14 +373,6 @@ public class StackTraceTreeBuilder {
         removeMeasurements(node1);
         removeMeasurements(node2);
 
-        if (mergedChildren.containsKey(node1.getPayload().getMethodName())) {
-            mergedChildren.put(node1.getPayload().getMethodName(), node1);
-        }
-
-        if (mergedChildren.containsKey(node2.getPayload().getMethodName())) {
-            mergedChildren.put(node2.getPayload().getMethodName(), node2);
-        }
-
         if (!mergedChildren.containsKey(node1.getPayload().getMethodName())) {
             mergedChildren.put(node1.getPayload().getMethodName(), node1);
         }
