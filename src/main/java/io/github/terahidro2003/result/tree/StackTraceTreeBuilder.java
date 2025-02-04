@@ -249,6 +249,7 @@ public class StackTraceTreeBuilder {
             StackTraceTreeNode currentNode = stack.pop();
 
             if(currentNode.getPayload().getMethodName().contains(searchableContent) && !strict) {
+                log.info("Found testcase method subtree for {}", currentNode.getPayload().getMethodName());
                 filteredSubtrees.add(currentNode);
             }
 
@@ -296,18 +297,18 @@ public class StackTraceTreeBuilder {
 
     public static StackTraceTreeNode mergeTrees(List<StackTraceTreeNode> trees) {
         if (trees == null || trees.isEmpty()) {
+            log.warn("Supplied tree list was null or empty");
             return null;
         }
 
+        log.info("Merging {} amount of subtrees", trees.size());
+
         if (trees.size() == 1) {
+            log.info("Only one subtree was provided. Returning only one subtree as merged tree.");
             return trees.get(0);
         }
 
-        StackTraceTreeNode firstTree = trees.get(0);
-        if (firstTree == null) {
-            throw new RuntimeException("First tree cannot be null");
-        }
-
+        log.info("Obtaining root signatures for mergable tree root node equality check");
         List<String> rootSignatures = new ArrayList<>();
         for (StackTraceTreeNode tree : trees) {
             rootSignatures.add(tree.getPayload().getMethodName());
@@ -318,6 +319,20 @@ public class StackTraceTreeBuilder {
                 throw new RuntimeException("Trees cannot be merged. Root node signatures are not equal.");
             }
             previousSignature = signature;
+        }
+
+        if(!unequalSignatures.isEmpty()) {
+            log.info("Unequal signatures detected: {}", unequalSignatures);
+            log.info("Attempting to remove unequal root nodes");
+            String finalPreviousSignature = previousSignature;
+            List<StackTraceTreeNode> toDelete = trees.stream().filter(t -> !Objects.equals(t.getPayload().getMethodName(), finalPreviousSignature)).toList();
+            trees.removeAll(toDelete);
+            log.info("Amount of subtrees removed {}", trees.size());
+        }
+
+        StackTraceTreeNode firstTree = trees.get(0);
+        if (firstTree == null) {
+            throw new RuntimeException("First tree cannot be null");
         }
 
         Map<String, StackTraceTreeNode> mergedChildren = new HashMap<>();
@@ -444,27 +459,29 @@ public class StackTraceTreeBuilder {
         }
     }
 
-    public StackTraceTreeNode buildTree(List<File> jfrs, String commit, int vms, String testcase) {
+    public StackTraceTreeNode buildTree(List<File> jfrs, String commit, int vms, String testcase,
+                                        boolean filterJvmNativeNodes) {
+        log.info("Building tree for testcase method: {}", testcase);
         if (jfrs.isEmpty()) {
             throw new RuntimeException("JFR files cannot be empty");
         }
 
         jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit)).toList();
+        log.info("Filtered JFRs for tree generation: {}", jfrs);
 
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
         StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
         List<StackTraceTreeNode> vmTrees = new LinkedList<>();
         for (int i = 0; i<vms; i++) {
+            log.info("Building local tree for VM: {} from JFR file: {}", i, jfrs.get(i).getName());
             StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
             vmTrees.add(vmTree);
         }
+
         // filters out common JVM and native method call nodes from all retrieved subtrees
-        vmTrees = vmTrees.stream().map(builder::filterJvmNodes).toList();
-        vmTrees.forEach(tree -> {
-            System.out.println();
-            tree.printTree();
-            System.out.println();
-        });
+        if(filterJvmNativeNodes) {
+            vmTrees = vmTrees.stream().map(builder::filterJvmNodes).toList();
+        }
 
         Map<List<String>, List<Double>> measurementsMap = builder.createMeasurementsMap(vmTrees, testcase);
         StackTraceTreeNode mergedTree = StackTraceTreeBuilder.mergeTrees(vmTrees);
@@ -479,6 +496,7 @@ public class StackTraceTreeBuilder {
         StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
 
         // retrieves subtrees that share the same parent node
+        log.info("Filtering and retrieving diverted testcase method subtrees");
         List<StackTraceTreeNode> filteredSubtrees = builder.filterMultiple(testcase, bat, false);
         return StackTraceTreeBuilder.mergeTrees(filteredSubtrees);
     }
