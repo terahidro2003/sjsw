@@ -314,9 +314,11 @@ public class StackTraceTreeBuilder {
             rootSignatures.add(tree.getPayload().getMethodName());
         }
         String previousSignature = rootSignatures.get(0);
+        List<String> unequalSignatures = new ArrayList<>();
         for (String signature : rootSignatures) {
             if(!previousSignature.equals(signature)) {
-                throw new RuntimeException("Trees cannot be merged. Root node signatures are not equal.");
+                unequalSignatures.add(signature);
+                log.error("One or more of the root signatures are not equal! Previous: {}, was: {}", previousSignature, signature);
             }
             previousSignature = signature;
         }
