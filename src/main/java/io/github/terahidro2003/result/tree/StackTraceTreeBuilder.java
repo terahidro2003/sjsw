@@ -482,7 +482,7 @@ public class StackTraceTreeBuilder {
         Map<List<String>, List<Double>> measurementsMap = builder.createMeasurementsMap(vmTrees, testcase);
         StackTraceTreeNode mergedTree = StackTraceTreeBuilder.mergeTrees(vmTrees);
 
-        builder.addLocalMeasurements(mergedTree, measurementsMap, "11111");
+        builder.addLocalMeasurements(mergedTree, measurementsMap, commit);
         return mergedTree;
     }
 
