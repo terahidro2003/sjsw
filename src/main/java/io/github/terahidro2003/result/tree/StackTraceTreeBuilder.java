@@ -342,6 +342,8 @@ public class StackTraceTreeBuilder {
             mergedChildren.put(child.getPayload().getMethodName(), child);
         }
 
+        trees.remove(firstTree);
+
         for (StackTraceTreeNode tree : trees) {
             for (StackTraceTreeNode child : tree.getChildren()) {
                 for (StackTraceTreeNode firstChild : firstTree.getChildren()) {
