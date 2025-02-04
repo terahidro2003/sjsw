@@ -366,6 +366,10 @@ public class StackTraceTreeBuilder {
             throw new RuntimeException("One or both of the root nodes were null");
         }
 
+        if (!node1.getPayload().getMethodName().equals(node2.getPayload().getMethodName())) {
+            return;
+        }
+
         removeMeasurements(node1);
         removeMeasurements(node2);
 
