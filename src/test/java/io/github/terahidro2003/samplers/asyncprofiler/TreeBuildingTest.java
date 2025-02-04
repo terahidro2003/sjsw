@@ -14,33 +14,15 @@ public class TreeBuildingTest {
 
     @Test
     public void test() {
-        String testcase = "testing()";
+        String testcase = "testMe()";
         List<File> jfrs = List.of(
-                new File(resourcesDir + "/1.jfr"),
-                new File(resourcesDir + "/2.jfr")
+                new File(resourcesDir + "/1111_1.jfr"),
+                new File(resourcesDir + "/1111_2.jfr")
         );
-
-        SamplerResultsProcessor processor = new SamplerResultsProcessor();
-        StackTraceTreeNode bat = processor.getTreeFromJfr(jfrs);
 
         StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
 
-        // retrieves subtrees that share the same parent node
-        List<StackTraceTreeNode> filteredSubtrees = builder.filterMultiple(testcase, bat, false);
-
-        // filters out common JVM and native method call nodes from all retrieved subtrees
-        filteredSubtrees = filteredSubtrees.stream().map(builder::filterJvmNodes).toList();
-        filteredSubtrees.forEach(tree -> {
-            System.out.println();
-            tree.printTree();
-            System.out.println();
-        });
-
-        Map<List<String>, List<Double>> measurementsMap = builder.createMeasurementsMap(filteredSubtrees, testcase);
-        StackTraceTreeNode mergedTree = StackTraceTreeBuilder.mergeTrees(filteredSubtrees);
-
-
-        builder.addLocalMeasurements(mergedTree, measurementsMap, "11111");
+        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 2, testcase, false);
 
         System.out.println();
         System.out.println();
@@ -56,7 +38,23 @@ public class TreeBuildingTest {
         }
 
         StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
-        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 5, testcase);
+        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 5, testcase, false);
+
+        System.out.println();
+        System.out.println();
+        mergedTree.printTree();
+    }
+
+    @Test
+    public void test20Vms() {
+        String testcase = "testMe()";
+        List<File> jfrs = new ArrayList<>();
+        for (int i = 1; i < 21; i++) {
+            jfrs.add(new File(resourcesDir + "/1111 (" + i + ").jfr"));
+        }
+
+        StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
+        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 20, testcase, false);
 
         System.out.println();
         System.out.println();
