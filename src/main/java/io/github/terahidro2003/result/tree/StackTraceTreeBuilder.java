@@ -411,6 +411,7 @@ public class StackTraceTreeBuilder {
 
             while (!stack.isEmpty()) {
                 StackTraceTreeNode currentNode = stack.pop();
+                if(currentNode == null) continue;
 
                 List<String> parentSignatures = currentNode.getParentMethodNames();
                 List<String> signaturesToRemove = new LinkedList<>();
