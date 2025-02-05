@@ -303,6 +303,8 @@ public class StackTraceTreeBuilder {
 
         log.info("Merging {} amount of subtrees", trees.size());
 
+        trees = trees.stream().filter(Objects::nonNull).toList();
+
         if (trees.size() == 1) {
             log.info("Only one subtree was provided. Returning only one subtree as merged tree.");
             return trees.get(0);
