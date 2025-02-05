@@ -20,7 +20,7 @@ public class StackTraceTreeBuilder {
         // since there are calls from GC, and asprof java agent that do not originate from "main" method
         // such "not main" calls have considerable overhead (from 5 to 15%)
         // such situation and its influence on overhead needs to be investigated
-        this.root = new StackTraceTreeNode(null, new ArrayList<>(), new StackTraceTreePayload("root"));
+        this.root = new StackTraceTreeNode(null, new LinkedList<>(), new StackTraceTreePayload("root"));
     }
 
     public StackTraceTreeNode build(List<StackTraceData> organizedSamples) {
@@ -67,7 +67,7 @@ public class StackTraceTreeBuilder {
         // If our current parent node doesn't have our current method name as a child,
         // we assume that this is a new child of the current parent node.
         if(child == null) {
-            child = new StackTraceTreeNode(parent, new ArrayList<>(), new StackTraceTreePayload(methodNames.get(0)));
+            child = new StackTraceTreeNode(parent, new LinkedList<>(), new StackTraceTreePayload(methodNames.get(0)));
             parent.getChildren().add(child);
         }
 
@@ -123,7 +123,7 @@ public class StackTraceTreeBuilder {
         // If our current parent node doesn't have our current method name as a child,
         // we assume that this is a new child of the current parent node.
         if(child == null) {
-            child = new StackTraceTreeNode(parent, new ArrayList<>(), new StackTraceTreePayload(methodNames.get(0)));
+            child = new StackTraceTreeNode(parent, new LinkedList<>(), new StackTraceTreePayload(methodNames.get(0)));
             parent.getChildren().add(child);
         }
 
@@ -160,11 +160,11 @@ public class StackTraceTreeBuilder {
             }
         }
 
-        StackTraceTreeNode node = new StackTraceTreeNode(callee, new ArrayList<>(), payload);
+        StackTraceTreeNode node = new StackTraceTreeNode(callee, new LinkedList<>(), payload);
         node.setInitialWeight(stacktraceTreeModel.getCumulativeWeight());
 
         var children = stacktraceTreeModel.getChildren();
-        List<StackTraceTreeNode> newChildren = new ArrayList<>();
+        List<StackTraceTreeNode> newChildren = new LinkedList<>();
         for (var child : children) {
             StackTraceTreeNode childNode = addNodeFromStacktraceTreeModel(child, node);
             if (child != null && childNode != null) {
@@ -241,7 +241,7 @@ public class StackTraceTreeBuilder {
     public List<StackTraceTreeNode> filterMultiple(String searchableContent,
                                                           StackTraceTreeNode tree,
                                                           Boolean strict) {
-        List<StackTraceTreeNode> filteredSubtrees = new ArrayList<>();
+        List<StackTraceTreeNode> filteredSubtrees = new LinkedList<>();
         Stack<StackTraceTreeNode> stack = new Stack<>();
         stack.push(tree);
 
@@ -284,7 +284,7 @@ public class StackTraceTreeBuilder {
         }
 
         var children = callee.getChildren();
-        List<StackTraceTreeNode> newChildren = new ArrayList<>();
+        List<StackTraceTreeNode> newChildren = new LinkedList<>();
         for (var child : children) {
             StackTraceTreeNode childNode = filterJvmNodesRecursive(child, exclude);
             if (child != null && childNode != null) {
@@ -309,7 +309,7 @@ public class StackTraceTreeBuilder {
         }
 
         log.info("Obtaining root signatures for mergable tree root node equality check");
-        List<String> rootSignatures = new ArrayList<>();
+        List<String> rootSignatures = new LinkedList<>();
         for (StackTraceTreeNode tree : trees) {
             rootSignatures.add(tree.getPayload().getMethodName());
         }
@@ -352,7 +352,7 @@ public class StackTraceTreeBuilder {
             }
         }
 
-        firstTree.children = new ArrayList<>(mergedChildren.values());
+        firstTree.children = new LinkedList<>(mergedChildren.values());
         return firstTree;
     }
 
@@ -411,7 +411,7 @@ public class StackTraceTreeBuilder {
                 StackTraceTreeNode currentNode = stack.pop();
 
                 List<String> parentSignatures = currentNode.getParentMethodNames();
-                List<String> signaturesToRemove = new ArrayList<>();
+                List<String> signaturesToRemove = new LinkedList<>();
                 for (int i = 0; i < parentSignatures.size(); i++) {
                     if(parentSignatures.get(i).contains(testcaseSignature)) {
                         break;
@@ -422,7 +422,7 @@ public class StackTraceTreeBuilder {
                 parentSignatures.removeAll(signaturesToRemove);
 
                 if (!measurementsMap.containsKey(parentSignatures)) {
-                    measurementsMap.put(parentSignatures, new ArrayList<>());
+                    measurementsMap.put(parentSignatures, new LinkedList<>());
                     currentNode.setMeasurements(new HashMap<>());
                 }
                 measurementsMap.get(parentSignatures).add(currentNode.getInitialWeight());
