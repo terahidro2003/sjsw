@@ -181,10 +181,19 @@
                     <version>3.5.1</version>
                     <configuration>
                         <excludes>
-                            **/TestBenchmark.java
+                            **/TestBenchmark
                         </excludes>
                         <excludes>
                             **/ExampleTest.java
+                        </excludes>
+                        <excludes>
+                            **/.jfr
+                        </excludes>
+                        <excludes>
+                            **/.json
+                        </excludes>
+                        <excludes>
+                            **executables
                         </excludes>
                     </configuration>
                 </plugin>

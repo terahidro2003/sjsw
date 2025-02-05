@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class StackTraceTreeBuilder {
     public static final Logger log = LoggerFactory.getLogger(StackTraceTreeBuilder.class);
@@ -20,7 +21,7 @@ public class StackTraceTreeBuilder {
         // since there are calls from GC, and asprof java agent that do not originate from "main" method
         // such "not main" calls have considerable overhead (from 5 to 15%)
         // such situation and its influence on overhead needs to be investigated
-        this.root = new StackTraceTreeNode(null, new LinkedList<>(), new StackTraceTreePayload("root"));
+        this.root = new StackTraceTreeNode(null, new ArrayList<>(), new StackTraceTreePayload("root"));
     }
 
     public StackTraceTreeNode build(List<StackTraceData> organizedSamples) {
@@ -67,7 +68,7 @@ public class StackTraceTreeBuilder {
         // If our current parent node doesn't have our current method name as a child,
         // we assume that this is a new child of the current parent node.
         if(child == null) {
-            child = new StackTraceTreeNode(parent, new LinkedList<>(), new StackTraceTreePayload(methodNames.get(0)));
+            child = new StackTraceTreeNode(parent, new ArrayList<>(), new StackTraceTreePayload(methodNames.get(0)));
             parent.getChildren().add(child);
         }
 
@@ -123,7 +124,7 @@ public class StackTraceTreeBuilder {
         // If our current parent node doesn't have our current method name as a child,
         // we assume that this is a new child of the current parent node.
         if(child == null) {
-            child = new StackTraceTreeNode(parent, new LinkedList<>(), new StackTraceTreePayload(methodNames.get(0)));
+            child = new StackTraceTreeNode(parent, new ArrayList<>(), new StackTraceTreePayload(methodNames.get(0)));
             parent.getChildren().add(child);
         }
 
@@ -160,11 +161,11 @@ public class StackTraceTreeBuilder {
             }
         }
 
-        StackTraceTreeNode node = new StackTraceTreeNode(callee, new LinkedList<>(), payload);
+        StackTraceTreeNode node = new StackTraceTreeNode(callee, new ArrayList<>(), payload);
         node.setInitialWeight(stacktraceTreeModel.getCumulativeWeight());
 
         var children = stacktraceTreeModel.getChildren();
-        List<StackTraceTreeNode> newChildren = new LinkedList<>();
+        List<StackTraceTreeNode> newChildren = new ArrayList<>();
         for (var child : children) {
             StackTraceTreeNode childNode = addNodeFromStacktraceTreeModel(child, node);
             if (child != null && childNode != null) {
@@ -241,7 +242,7 @@ public class StackTraceTreeBuilder {
     public List<StackTraceTreeNode> filterMultiple(String searchableContent,
                                                           StackTraceTreeNode tree,
                                                           Boolean strict) {
-        List<StackTraceTreeNode> filteredSubtrees = new LinkedList<>();
+        List<StackTraceTreeNode> filteredSubtrees = new ArrayList<>();
         Stack<StackTraceTreeNode> stack = new Stack<>();
         stack.push(tree);
 
@@ -284,7 +285,7 @@ public class StackTraceTreeBuilder {
         }
 
         var children = callee.getChildren();
-        List<StackTraceTreeNode> newChildren = new LinkedList<>();
+        List<StackTraceTreeNode> newChildren = new ArrayList<>();
         for (var child : children) {
             StackTraceTreeNode childNode = filterJvmNodesRecursive(child, exclude);
             if (child != null && childNode != null) {
@@ -303,7 +304,9 @@ public class StackTraceTreeBuilder {
 
         log.info("Merging {} amount of subtrees", trees.size());
 
-        trees = trees.stream().filter(Objects::nonNull).toList();
+        trees = new ArrayList<StackTraceTreeNode>(trees);
+
+        trees = trees.stream().filter(Objects::nonNull).collect(Collectors.toCollection(ArrayList::new));
 
         if (trees.size() == 1) {
             log.info("Only one subtree was provided. Returning only one subtree as merged tree.");
@@ -311,7 +314,7 @@ public class StackTraceTreeBuilder {
         }
 
         log.info("Obtaining root signatures for mergable tree root node equality check");
-        List<String> rootSignatures = new LinkedList<>();
+        List<String> rootSignatures = new ArrayList<>();
         for (StackTraceTreeNode tree : trees) {
             rootSignatures.add(tree.getPayload().getMethodName());
         }
@@ -329,7 +332,9 @@ public class StackTraceTreeBuilder {
             log.info("Unequal signatures detected: {}", unequalSignatures);
             log.info("Attempting to remove unequal root nodes");
             String finalPreviousSignature = previousSignature;
-            List<StackTraceTreeNode> toDelete = trees.stream().filter(t -> !Objects.equals(t.getPayload().getMethodName(), finalPreviousSignature)).toList();
+            List<StackTraceTreeNode> toDelete = trees.stream()
+                    .filter(t -> !Objects.equals(t.getPayload().getMethodName(), finalPreviousSignature))
+                    .collect(Collectors.toCollection(ArrayList::new));
             trees.removeAll(toDelete);
             log.info("Amount of subtrees removed {}", trees.size());
         }
@@ -354,7 +359,7 @@ public class StackTraceTreeBuilder {
             }
         }
 
-        firstTree.children = new LinkedList<>(mergedChildren.values());
+        firstTree.children = new ArrayList<>(mergedChildren.values());
         return firstTree;
     }
 
@@ -414,7 +419,7 @@ public class StackTraceTreeBuilder {
                 if(currentNode == null) continue;
 
                 List<String> parentSignatures = currentNode.getParentMethodNames();
-                List<String> signaturesToRemove = new LinkedList<>();
+                List<String> signaturesToRemove = new ArrayList<>();
                 for (int i = 0; i < parentSignatures.size(); i++) {
                     if(parentSignatures.get(i).contains(testcaseSignature)) {
                         break;
@@ -425,7 +430,7 @@ public class StackTraceTreeBuilder {
                 parentSignatures.removeAll(signaturesToRemove);
 
                 if (!measurementsMap.containsKey(parentSignatures)) {
-                    measurementsMap.put(parentSignatures, new LinkedList<>());
+                    measurementsMap.put(parentSignatures, new ArrayList<>());
                     currentNode.setMeasurements(new HashMap<>());
                 }
                 measurementsMap.get(parentSignatures).add(currentNode.getInitialWeight());
@@ -465,12 +470,13 @@ public class StackTraceTreeBuilder {
             throw new RuntimeException("JFR files cannot be empty");
         }
 
-        jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit)).toList();
+        jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit))
+                .collect(Collectors.toCollection(ArrayList::new));
         log.info("Filtered JFRs for tree generation: {}", jfrs);
 
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
         StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
-        List<StackTraceTreeNode> vmTrees = new LinkedList<>();
+        List<StackTraceTreeNode> vmTrees = new ArrayList<>();
         for (int i = 0; i<vms; i++) {
             log.info("Building local tree for VM: {} from JFR file: {}", i, jfrs.get(i).getName());
             StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
@@ -479,7 +485,8 @@ public class StackTraceTreeBuilder {
 
         // filters out common JVM and native method call nodes from all retrieved subtrees
         if(filterJvmNativeNodes) {
-            vmTrees = vmTrees.stream().map(builder::filterJvmNodes).toList();
+            vmTrees = vmTrees.stream().map(builder::filterJvmNodes)
+                    .collect(Collectors.toCollection(ArrayList::new));
         }
 
         Map<List<String>, List<Double>> measurementsMap = builder.createMeasurementsMap(vmTrees, testcase);
