@@ -46,7 +46,6 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     public void execute(long pid, Config config, Duration duration) throws InterruptedException, IOException {
         configureResultsFolder(config);
         config = retrieveAsyncProfiler(config);
-        // TODO: allow custom frequency in hz specified in config
         String[] command = {config.profilerPath(), "-d", String.valueOf(duration.getSeconds()), String.valueOf(pid)};
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -165,7 +164,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     @Override
-    public void execute(Config config, Duration samplingDuration, Duration frequency) throws InterruptedException, IOException {
+    public void execute(Config config, Duration samplingDuration, Duration interval) throws InterruptedException, IOException {
     }
 
     private StackTraceTreeNode generateTree(List<StackTraceData> samples) {
@@ -279,7 +278,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
             }
             String profilerPath = FileUtils.retrieveAsyncProfilerExecutable(folder.toPath());
             log.warn("Downloaded profiler path: {}", profilerPath);
-            return new Config(config.executable(), config.mainClass(), profilerPath, config.outputPath(), config.JfrEnabled(), config.frequency(), false);
+            return new Config(config.executable(), config.mainClass(), profilerPath, config.outputPath(), config.JfrEnabled(), config.interval(), false);
         }
         return config;
     }

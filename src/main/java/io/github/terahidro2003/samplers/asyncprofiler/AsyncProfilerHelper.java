@@ -58,7 +58,7 @@ public class AsyncProfilerHelper {
 
         final String asprofAgent;
 
-        if(config.frequency() == null || config.frequency() == 0) {
+        if(config.interval() == null || config.interval() == 0) {
             if(config.timeoutDisabled()) {
                 asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=10ms,cstack=dwarf,event=wall,file=" + output;
             } else {
@@ -66,9 +66,9 @@ public class AsyncProfilerHelper {
             }
         } else {
             if(config.timeoutDisabled()) {
-                asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.frequency() + "ms,cstack=dwarf,event=wall,file=" + output;
+                asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.interval() + "ms,cstack=dwarf,event=wall,file=" + output;
             } else {
-                asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.frequency() + "ms,timeout=" + duration.getSeconds() + ",cstack=dwarf,event=wall,file=" + output;
+                asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.interval() + "ms,timeout=" + duration.getSeconds() + ",cstack=dwarf,event=wall,file=" + output;
             }
         }
         return new MeasurementInformation(output.getAbsolutePath(), asprofAgent);
