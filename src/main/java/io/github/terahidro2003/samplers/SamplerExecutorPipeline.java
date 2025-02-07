@@ -25,7 +25,7 @@ public interface SamplerExecutorPipeline {
 
     void execute(Config config, Duration samplingDuration, int vmId, int vms, String commit, String oldCommit) throws InterruptedException, IOException;
 
-    void execute(Config config ,Duration samplingDuration, Duration frequency) throws InterruptedException, IOException;
+    void execute(Config config ,Duration samplingDuration, Duration interval) throws InterruptedException, IOException;
 
     void write(String destinationFile);
 

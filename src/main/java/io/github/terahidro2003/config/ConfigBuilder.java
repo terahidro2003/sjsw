@@ -10,7 +10,7 @@ public class ConfigBuilder {
     private String profilerPath;
     private String outputPath;
     private Boolean JfrEnabled;
-    private Integer frequency;
+    private Integer interval;
     private Boolean timeoutDisabled = true;
 
     public ConfigBuilder() {
@@ -58,8 +58,8 @@ public class ConfigBuilder {
         return this;
     }
 
-    public ConfigBuilder frequency(int frequency) {
-        this.frequency = frequency;
+    public ConfigBuilder interval(int interval) {
+        this.interval = interval;
         return this;
     }
 
@@ -70,7 +70,7 @@ public class ConfigBuilder {
                 this.profilerPath,
                 this.outputPath,
                 this.JfrEnabled,
-                this.frequency,
+                this.interval,
                 this.timeoutDisabled
         );
         return config1;

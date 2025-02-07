@@ -30,7 +30,7 @@ public class PeassIntegrationTest {
                 .autodownloadProfiler()
                 .jfrEnabled(true)
                 .withTimeoutDisabled()
-                .frequency(50)
+                .interval(50)
                 .build();
 
         measure(vms, commits, config, measurementIdentifier, outputPath, testcaseMethod);
@@ -50,7 +50,7 @@ public class PeassIntegrationTest {
                 .autodownloadProfiler()
                 .jfrEnabled(true)
                 .withTimeoutDisabled()
-                .frequency(10)
+                .interval(10)
                 .build();
 
         measure(vms, commits, config, measurementIdentifier, outputPath, testcaseMethod);
