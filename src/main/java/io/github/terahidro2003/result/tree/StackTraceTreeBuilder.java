@@ -447,6 +447,48 @@ public class StackTraceTreeBuilder {
         return measurementsMap;
     }
 
+    public Map<List<String>, List<VmMeasurement>> createMeasurementsMap(List<StackTraceTreeNode> localTrees,
+                                                                 String testcaseSignature, boolean flag) {
+        Map<List<String>, List<VmMeasurement>> measurementsMap = new HashMap<>();
+        for (StackTraceTreeNode localTree : localTrees) {
+
+            Stack<StackTraceTreeNode> stack = new Stack<>();
+            stack.push(localTree);
+
+            while (!stack.isEmpty()) {
+                StackTraceTreeNode currentNode = stack.pop();
+                if(currentNode == null) continue;
+
+                List<String> parentSignatures = currentNode.getParentMethodNames();
+                List<String> signaturesToRemove = new ArrayList<>();
+                for (int i = 0; i < parentSignatures.size(); i++) {
+                    if(parentSignatures.get(i).contains(testcaseSignature)) {
+                        break;
+                    } else {
+                        signaturesToRemove.add(parentSignatures.get(i));
+                    }
+                }
+                parentSignatures.removeAll(signaturesToRemove);
+
+                if (!measurementsMap.containsKey(parentSignatures)) {
+                    measurementsMap.put(parentSignatures, new ArrayList<VmMeasurement>());
+                    currentNode.setMeasurements(new HashMap<>());
+                }
+
+                measurementsMap.get(parentSignatures)
+                        .add(new VmMeasurement(new ArrayList<Double>(List.of(currentNode.getInitialWeight())), localTree.getPayload().getVm()));
+
+                for (StackTraceTreeNode child : currentNode.getChildren()) {
+                    if (child != null) {
+                        stack.push(child);
+                    }
+                }
+            }
+        }
+
+        return measurementsMap;
+    }
+
     public void addLocalMeasurements(StackTraceTreeNode bat, Map<List<String>, List<Double>> measurementsMap, String identifier) {
         if (bat == null || measurementsMap == null) {
             throw new IllegalArgumentException("BAT and measurements map cannot be null");
@@ -459,6 +501,24 @@ public class StackTraceTreeBuilder {
             var result = StackTraceTreeBuilder.search(signatures, bat);
             if (result != null) {
                 for (double weight : weights) {
+                    result.addMeasurement(identifier, weight);
+                }
+            }
+        }
+    }
+
+    public void addLocalMeasurements(StackTraceTreeNode bat, Map<List<String>, List<VmMeasurement>> measurementsMap, String identifier, boolean flag) {
+        if (bat == null || measurementsMap == null) {
+            throw new IllegalArgumentException("BAT and measurements map cannot be null");
+        }
+
+        for (Map.Entry<List<String>, List<VmMeasurement>> entry : measurementsMap.entrySet()) {
+            List<String> signatures = entry.getKey();
+            List<VmMeasurement> weights = entry.getValue();
+
+            var result = StackTraceTreeBuilder.search(signatures, bat);
+            if (result != null) {
+                for (VmMeasurement weight : weights) {
                     result.addMeasurement(identifier, weight);
                 }
             }
@@ -491,10 +551,10 @@ public class StackTraceTreeBuilder {
                     .collect(Collectors.toCollection(ArrayList::new));
         }
 
-        Map<List<String>, List<Double>> measurementsMap = builder.createMeasurementsMap(vmTrees, testcase);
+        Map<List<String>, List<VmMeasurement>> measurementsMap = builder.createMeasurementsMap(vmTrees, testcase, false);
         StackTraceTreeNode mergedTree = StackTraceTreeBuilder.mergeTrees(vmTrees);
 
-        builder.addLocalMeasurements(mergedTree, measurementsMap, commit);
+        builder.addLocalMeasurements(mergedTree, measurementsMap, commit, false);
         return mergedTree;
     }
 
@@ -515,6 +575,8 @@ public class StackTraceTreeBuilder {
         // retrieves subtrees that share the same parent node
         log.info("Filtering and retrieving diverted testcase method subtrees");
         List<StackTraceTreeNode> filteredSubtrees = builder.filterMultiple(testcase, bat, false);
-        return StackTraceTreeBuilder.mergeTrees(filteredSubtrees);
+        var mergedTree = StackTraceTreeBuilder.mergeTrees(filteredSubtrees);
+        mergedTree.getPayload().setVm(vm);
+        return mergedTree;
     }
 }
