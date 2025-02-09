@@ -105,4 +105,15 @@ public class FileUtils {
             }
         }
     }
+
+    public static void renameFile(File original, String newName) throws IOException {
+        File newFile = new File(original.getParent(), newName);
+        if (newFile.exists())
+            throw new java.io.IOException("Target file already exists");
+
+        boolean success = original.renameTo(newFile);
+        if (!success) {
+            throw new IOException("Failed to rename " + original.getName() + " to " + newName);
+        }
+    }
 }
