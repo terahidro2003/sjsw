@@ -159,4 +159,28 @@ public class SamplerResultsProcessor {
         log.info("Extracted samples from jfr file {}", jfr_json);
         return new File(jfr_json);
     }
+
+    public void processIterationMeasurementFiles(File resultPath, int vm, String commit) {
+        if (!resultPath.exists()) {
+            throw new IllegalArgumentException("Result path " + resultPath + " does not exist");
+        }
+
+        List<File> unprocessedJfrs = listJfrMeasurementFiles(resultPath.toPath(), List.of("unprocessed"));
+        if(unprocessedJfrs.isEmpty()) {
+           log.error("No unprocessed iterative measurements identified.");
+           return;
+        }
+
+        for (int i = 0; i < unprocessedJfrs.size(); i++) {
+            String newName = "checked_sjsw_partial_vm_" + vm + "_iteration_" + i + "_commit_" + commit + ".jfr";
+            if(unprocessedJfrs.get(i) == null) {
+                continue;
+            }
+            try {
+                FileUtils.renameFile(unprocessedJfrs.get(i), newName);
+            } catch (IOException e) {
+                log.error("Something went wrong while renaming partial result JFR file");
+            }
+        }
+    }
 }
