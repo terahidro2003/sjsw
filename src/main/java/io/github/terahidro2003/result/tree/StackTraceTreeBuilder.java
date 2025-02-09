@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class StackTraceTreeBuilder {
@@ -477,7 +479,7 @@ public class StackTraceTreeBuilder {
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
         StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
         List<StackTraceTreeNode> vmTrees = new ArrayList<>();
-        for (int i = 0; i<vms; i++) {
+        for (int i = 0; i<jfrs.size(); i++) {
             log.info("Building local tree for VM: {} from JFR file: {}", i, jfrs.get(i).getName());
             StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
             vmTrees.add(vmTree);
@@ -496,8 +498,17 @@ public class StackTraceTreeBuilder {
         return mergedTree;
     }
 
+    public static int extractVmNumber(String filename) {
+        Pattern pattern = Pattern.compile("_vm_(\\d+)_");
+        Matcher matcher = pattern.matcher(filename);
+        matcher.find();
+        return Integer.parseInt(matcher.group(1));
+    }
+
     public StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
         StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr));
+        String filename = jfr.getName();
+        int vm = extractVmNumber(filename);
 
         StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
 
