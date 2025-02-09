@@ -6,6 +6,7 @@ import io.github.terahidro2003.result.tree.StackTraceTreeBuilder;
 import io.github.terahidro2003.result.tree.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
 import io.github.terahidro2003.utils.CommandStarter;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -91,6 +92,20 @@ public class TreeBuildingTest {
     }
 
     @Test
+    public void testIterativeTree() {
+        String testcase = "testMe()";
+        File folder = new File(resourcesDir + "/iterativeSamples");
+        List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
+
+        StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
+        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "55bbfafd67ee1f7dc721ea945714a324708787c6", 2, testcase, false);
+
+        System.out.println();
+        System.out.println();
+        mergedTree.printTree();
+    }
+
+    @Test
     public void test20Vms() {
         String testcase = "testMe()";
         List<File> jfrs = new ArrayList<>();
@@ -104,5 +119,11 @@ public class TreeBuildingTest {
         System.out.println();
         System.out.println();
         mergedTree.printTree();
+    }
+
+    @Test
+    public void testFilenamePatterRecognition() {
+        int vm = StackTraceTreeBuilder.extractVmNumber("checked_sjsw_partial_vm_1_iteration_2_commit_55bbfafd67ee1f7dc721ea945714a324708787c6.jfr");
+        Assertions.assertEquals(vm, 1);
     }
 }
