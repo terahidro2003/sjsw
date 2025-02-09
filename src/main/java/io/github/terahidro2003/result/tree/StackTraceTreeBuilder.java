@@ -399,6 +399,7 @@ public class StackTraceTreeBuilder {
             StackTraceTreeNode currentNode = stack.pop();
 
             currentNode.setMeasurements(new HashMap<>());
+            currentNode.resetVmMeasurements();
 
             for (StackTraceTreeNode child : currentNode.getChildren()) {
                 if (child != null) {

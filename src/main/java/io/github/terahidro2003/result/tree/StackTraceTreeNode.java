@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StackTraceTreeNode {
     private final List<String> parentMethodNames = new ArrayList<>();
@@ -13,6 +14,8 @@ public class StackTraceTreeNode {
     private StackTraceTreePayload payload;
 
     private Map<String, List<Double>> measurements = new HashMap<>();
+    private Map<String, List<VmMeasurement>> vmMeasurements = new HashMap<>();
+
     private Double initialWeight;
 
     public StackTraceTreeNode(StackTraceTreeNode parent, List<StackTraceTreeNode> children, StackTraceTreePayload payload) {
@@ -41,10 +44,15 @@ public class StackTraceTreeNode {
     private void printTreeRecursive(StackTraceTreeNode node, String prefix, boolean isLast) {
         var measurementsList = node.getMeasurements();
         final StringBuilder measurementsAsString = new StringBuilder();
-        measurementsList.forEach((k,v) -> {
+        vmMeasurements.forEach((k,v) -> {
             v.forEach(value -> {
-                measurementsAsString.append(value);
-                measurementsAsString.append(",");
+                StringBuilder second = new StringBuilder();
+                value.getMeasurements().forEach(e -> {
+                    second.append(e);
+                    second.append(",");
+                });
+                measurementsAsString.append(second.toString());
+                measurementsAsString.append(";");
             });
         });
 
@@ -63,6 +71,28 @@ public class StackTraceTreeNode {
             measurements.put(identifier, new ArrayList<Double>());
         }
         measurements.get(identifier).add(weight);
+    }
+
+    public void addMeasurement(String identifier, VmMeasurement weights) {
+        if (!vmMeasurements.containsKey(identifier)) {
+            vmMeasurements.put(identifier, new ArrayList<>());
+        }
+        var currentWeights = vmMeasurements.get(identifier)
+                .stream().filter(w -> w.vm == weights.vm)
+                .collect(Collectors.toCollection(ArrayList::new));
+        if(currentWeights.size() == 1 && weights.getMeasurements().get(0) != null) {
+            currentWeights.get(0).addMeasurement(weights.getMeasurements().get(0));
+        } else if (currentWeights.isEmpty()) {
+            vmMeasurements.get(identifier).add(weights);
+        }
+    }
+
+    public void resetVmMeasurements() {
+        this.vmMeasurements = new HashMap<>();
+    }
+
+    public Map<String, List<VmMeasurement>> getVmMeasurements() {
+        return vmMeasurements;
     }
 
     public Double getInitialWeight() {
