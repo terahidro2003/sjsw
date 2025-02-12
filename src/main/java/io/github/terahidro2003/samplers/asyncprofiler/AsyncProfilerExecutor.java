@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.result.SamplerResultsProcessor;
 import io.github.terahidro2003.result.tree.StackTraceData;
-import io.github.terahidro2003.result.tree.builder.StackTraceTreeBuilder;
+import io.github.terahidro2003.result.tree.builder.ExecutionSampleTreeBuilder;
+import io.github.terahidro2003.result.tree.builder.StackTraceDataTreeBuilder;
 import io.github.terahidro2003.result.tree.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
@@ -115,7 +116,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
             SamplerResultsProcessor samplerResultsProcessor = new SamplerResultsProcessor();
             List<ExecutionSample> jfrSamples = samplerResultsProcessor.readJfrFile(new File(jfr_json));
-            StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
+            ExecutionSampleTreeBuilder stackTraceTreeBuilder = new ExecutionSampleTreeBuilder();
             var tree = stackTraceTreeBuilder.buildFromExecutionSamples(jfrSamples);
             root = tree;
             tree.printTree();
@@ -168,7 +169,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     private StackTraceTreeNode generateTree(List<StackTraceData> samples) {
-        StackTraceTreeBuilder stackTraceTreeBuilder = new StackTraceTreeBuilder();
+        StackTraceDataTreeBuilder stackTraceTreeBuilder = new StackTraceDataTreeBuilder();
         return stackTraceTreeBuilder.build(samples);
     }
 

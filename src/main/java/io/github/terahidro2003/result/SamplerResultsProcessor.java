@@ -1,7 +1,8 @@
 package io.github.terahidro2003.result;
 
 import io.github.terahidro2003.config.Config;
-import io.github.terahidro2003.result.tree.builder.StackTraceTreeBuilder;
+import io.github.terahidro2003.result.tree.TreeUtils;
+import io.github.terahidro2003.result.tree.builder.StackTraceModelTreeBuilder;
 import io.github.terahidro2003.result.tree.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerHelper;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
@@ -20,7 +21,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Stack;
 
 import static io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerExecutor.log;
 
@@ -41,33 +41,8 @@ public class SamplerResultsProcessor {
 
     public StackTraceTreeNode getTreeFromJfr(List<File> jfrs) {
         StacktraceTreeModel model = jfrToStacktraceGraph(jfrs);
-        StackTraceTreeNode tree = StackTraceTreeBuilder.buildFromStacktraceTreeModel(model);
-
+        StackTraceTreeNode tree = StackTraceModelTreeBuilder.buildFromStacktraceTreeModel(model);
         return tree;
-    }
-
-    private void addLocalMeasurements(StackTraceTreeNode bat, StackTraceTreeNode localTree, String identifier) {
-        if (bat == null || localTree == null) {
-            throw new IllegalArgumentException("Both stacktrace trees must be non-null");
-        }
-
-        Stack<StackTraceTreeNode> stack = new Stack<>();
-        stack.push(localTree);
-
-        while (!stack.isEmpty()) {
-            StackTraceTreeNode currentNode = stack.pop();
-
-            var result = StackTraceTreeBuilder.search(currentNode, bat);
-            if (result != null) {
-                result.addMeasurement(identifier, currentNode.getInitialWeight());
-            }
-
-            for (StackTraceTreeNode child : currentNode.getChildren()) {
-                if (child != null) {
-                    stack.push(child);
-                }
-            }
-        }
     }
 
     public List<File> listJfrMeasurementFiles(Path directory, List<String> containables) {
@@ -132,7 +107,7 @@ public class SamplerResultsProcessor {
     }
 
     public StackTraceTreeNode filterTestcaseSubtree(String testcase, StackTraceTreeNode bat) {
-        return StackTraceTreeBuilder.search(testcase, bat);
+        return TreeUtils.search(testcase, bat);
     }
 
     public File extractSamplesFromJFR(File file, String jsonFileName, Config config) throws IOException {

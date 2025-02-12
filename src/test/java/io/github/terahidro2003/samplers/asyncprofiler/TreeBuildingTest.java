@@ -3,6 +3,7 @@ package io.github.terahidro2003.samplers.asyncprofiler;
 import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.result.tree.builder.StackTraceTreeBuilder;
 import io.github.terahidro2003.result.tree.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.builder.VmContextTreeBuilder;
 import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
 import io.github.terahidro2003.utils.CommandStarter;
 import org.junit.jupiter.api.Assertions;
@@ -12,6 +13,7 @@ import java.io.File;
 import java.time.Duration;
 import java.util.*;
 
+import static io.github.terahidro2003.result.tree.builder.IterativeContextTreeBuilder.extractVmNumber;
 import static io.github.terahidro2003.samplers.asyncprofiler.TestConstants.benchmarkProjectDir;
 
 public class TreeBuildingTest {
@@ -65,7 +67,7 @@ public class TreeBuildingTest {
                 new File(resourcesDir + "/1111_2.jfr")
         );
 
-        StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
+        VmContextTreeBuilder builder = new VmContextTreeBuilder();
 
         StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 2, testcase, false);
 
@@ -82,7 +84,7 @@ public class TreeBuildingTest {
             jfrs.add(new File(resourcesDir + "/1111_" + i + ".jfr"));
         }
 
-        StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
+        VmContextTreeBuilder builder = new VmContextTreeBuilder();
         StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 5, testcase, false);
 
         System.out.println();
@@ -96,7 +98,7 @@ public class TreeBuildingTest {
         File folder = new File(resourcesDir + "/iterativeSamples");
         List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
 
-        StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
+        VmContextTreeBuilder builder = new VmContextTreeBuilder();
         StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "55bbfafd67ee1f7dc721ea945714a324708787c6", 2, testcase, false);
 
         System.out.println();
@@ -112,7 +114,7 @@ public class TreeBuildingTest {
             jfrs.add(new File(resourcesDir + "/1111 (" + i + ").jfr"));
         }
 
-        StackTraceTreeBuilder builder = new StackTraceTreeBuilder();
+        VmContextTreeBuilder builder = new VmContextTreeBuilder();
         StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 20, testcase, false);
 
         System.out.println();
@@ -122,7 +124,7 @@ public class TreeBuildingTest {
 
     @Test
     public void testFilenamePatterRecognition() {
-        int vm = StackTraceTreeBuilder.extractVmNumber("checked_sjsw_partial_vm_1_iteration_2_commit_55bbfafd67ee1f7dc721ea945714a324708787c6.jfr");
+        int vm = extractVmNumber("checked_sjsw_partial_vm_1_iteration_2_commit_55bbfafd67ee1f7dc721ea945714a324708787c6.jfr");
         Assertions.assertEquals(vm, 1);
     }
 }
