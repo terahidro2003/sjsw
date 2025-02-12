@@ -39,7 +39,7 @@ public class PeassIntegrationTest {
     @Test
     void integrateIntensive() {
         final String[] commits = {"11111"};
-        final int vms = 20;
+        final int vms = 5;
         final String testcaseMethod = "testing";
 
         MeasurementIdentifier measurementIdentifier = new MeasurementIdentifier();

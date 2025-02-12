@@ -18,6 +18,10 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         this.delegate = delegate;
     }
 
+    public IterativeContextTreeBuilder() {
+        this.delegate = null;
+    }
+
     public StackTraceTreeNode buildTree(List<File> jfrs, String commit, String testcase, boolean filterJvmNativeNodes) {
         log.info("Building tree for testcase method: {}", testcase);
         if (jfrs.isEmpty()) {
