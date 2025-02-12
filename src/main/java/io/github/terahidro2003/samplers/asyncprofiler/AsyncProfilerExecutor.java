@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.result.SamplerResultsProcessor;
 import io.github.terahidro2003.result.tree.StackTraceData;
-import io.github.terahidro2003.result.tree.StackTraceTreeBuilder;
+import io.github.terahidro2003.result.tree.builder.StackTraceTreeBuilder;
 import io.github.terahidro2003.result.tree.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;

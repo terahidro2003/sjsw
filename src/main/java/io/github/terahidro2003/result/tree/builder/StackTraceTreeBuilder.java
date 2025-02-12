@@ -1,6 +1,10 @@
-package io.github.terahidro2003.result.tree;
+package io.github.terahidro2003.result.tree.builder;
 
 import io.github.terahidro2003.result.SamplerResultsProcessor;
+import io.github.terahidro2003.result.tree.StackTraceData;
+import io.github.terahidro2003.result.tree.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.StackTraceTreePayload;
+import io.github.terahidro2003.result.tree.VmMeasurement;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.AggregatableFrame;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.Node;
@@ -16,7 +20,7 @@ import java.util.stream.Collectors;
 
 public class StackTraceTreeBuilder {
     public static final Logger log = LoggerFactory.getLogger(StackTraceTreeBuilder.class);
-    private StackTraceTreeNode root;
+    private final StackTraceTreeNode root;
 
     public StackTraceTreeBuilder() {
         // "root" is not really a method, but we assume it is
@@ -174,7 +178,7 @@ public class StackTraceTreeBuilder {
                 newChildren.add(childNode);
             }
         }
-        node.children = newChildren;
+        node.setChildren(newChildren);
         return node;
     }
 
@@ -294,7 +298,7 @@ public class StackTraceTreeBuilder {
                 newChildren.add(childNode);
             }
         }
-        callee.children = newChildren;
+        callee.setChildren(newChildren);
         return callee;
     }
 
@@ -361,7 +365,7 @@ public class StackTraceTreeBuilder {
             }
         }
 
-        firstTree.children = new ArrayList<>(mergedChildren.values());
+        firstTree.setChildren(new ArrayList<>(mergedChildren.values()));
         return firstTree;
     }
 
@@ -449,7 +453,7 @@ public class StackTraceTreeBuilder {
     }
 
     public Map<List<String>, List<VmMeasurement>> createMeasurementsMap(List<StackTraceTreeNode> localTrees,
-                                                                 String testcaseSignature, boolean flag) {
+                                                                        String testcaseSignature, boolean flag) {
         Map<List<String>, List<VmMeasurement>> measurementsMap = new HashMap<>();
         for (StackTraceTreeNode localTree : localTrees) {
 

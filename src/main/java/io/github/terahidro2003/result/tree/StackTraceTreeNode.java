@@ -10,7 +10,7 @@ public class StackTraceTreeNode {
     private final List<String> parentMethodNames = new ArrayList<>();
 
     private StackTraceTreeNode parent;
-    List<StackTraceTreeNode> children;
+    private List<StackTraceTreeNode> children;
     private StackTraceTreePayload payload;
 
     private Map<String, List<Double>> measurements = new HashMap<>();
@@ -113,6 +113,26 @@ public class StackTraceTreeNode {
 
     public List<String> getParentMethodNames() {
         return parentMethodNames;
+    }
+
+    public StackTraceTreeNode getParent() {
+        return parent;
+    }
+
+    public void setParent(StackTraceTreeNode parent) {
+        this.parent = parent;
+    }
+
+    public void setChildren(List<StackTraceTreeNode> children) {
+        this.children = children;
+    }
+
+    public void setPayload(StackTraceTreePayload payload) {
+        this.payload = payload;
+    }
+
+    public void setVmMeasurements(Map<String, List<VmMeasurement>> vmMeasurements) {
+        this.vmMeasurements = vmMeasurements;
     }
 
     @Override

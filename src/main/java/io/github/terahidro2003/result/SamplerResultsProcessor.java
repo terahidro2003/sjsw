@@ -1,7 +1,7 @@
 package io.github.terahidro2003.result;
 
 import io.github.terahidro2003.config.Config;
-import io.github.terahidro2003.result.tree.StackTraceTreeBuilder;
+import io.github.terahidro2003.result.tree.builder.StackTraceTreeBuilder;
 import io.github.terahidro2003.result.tree.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerHelper;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
