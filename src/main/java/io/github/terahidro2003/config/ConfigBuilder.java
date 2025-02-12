@@ -1,6 +1,11 @@
 package io.github.terahidro2003.config;
 
 import io.github.terahidro2003.samplers.asyncprofiler.MeasurementIdentifier;
+import io.github.terahidro2003.utils.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class ConfigBuilder {
     private Config config;
@@ -36,6 +41,17 @@ public class ConfigBuilder {
         this.profilerPath = null;
         return this;
     }
+
+    public ConfigBuilder autodownloadProfilerGlobally() throws IOException {
+        this.profilerPath = null;
+        File tempProfilerFolder = new File("/tmp/async-profiler-sjsw");
+        if(!tempProfilerFolder.exists()) {
+            tempProfilerFolder.mkdir();
+        }
+        this.profilerPath = FileUtils.retrieveAsyncProfilerExecutable(Path.of(tempProfilerFolder.getPath()));
+        return this;
+    }
+
 
     public ConfigBuilder outputPath(String outputPath) {
         this.outputPath = outputPath;

@@ -1,5 +1,6 @@
 package io.github.terahidro2003;
 
+import io.github.terahidro2003.config.Constants;
 import one.profiler.AsyncProfiler;
 
 import java.io.File;
@@ -10,7 +11,7 @@ import java.util.UUID;
 
 public class SamplingResultsAnalyzer implements SamplingMeasurementPipeline {
 
-    private final AsyncProfiler asyncProfiler = AsyncProfiler.getInstance();
+    private final AsyncProfiler asyncProfiler = getAsProfInstance();
 
     @Override
     public List<File> prepareForIterativeMeasurements(File resultsFolder, int iterations) {
@@ -57,5 +58,13 @@ public class SamplingResultsAnalyzer implements SamplingMeasurementPipeline {
     @Override
     public void stopMeasure() {
         asyncProfiler.stop();
+    }
+
+    private static AsyncProfiler getAsProfInstance() {
+        if (new File(Constants.AS_PROF_FULL_PATH).exists()) {
+            return AsyncProfiler.getInstance(Constants.AS_PROF_FULL_PATH);
+        } else {
+            return AsyncProfiler.getInstance();
+        }
     }
 }
