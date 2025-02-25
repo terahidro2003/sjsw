@@ -1,7 +1,7 @@
 package io.github.terahidro2003.samplers.asyncprofiler;
 
 import io.github.terahidro2003.config.Config;
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.data.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
 import io.github.terahidro2003.utils.CommandStarter;
 import org.junit.jupiter.api.Assertions;

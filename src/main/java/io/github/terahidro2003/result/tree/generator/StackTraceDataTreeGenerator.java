@@ -1,15 +1,15 @@
-package io.github.terahidro2003.result.tree.builder;
+package io.github.terahidro2003.result.tree.generator;
 
-import io.github.terahidro2003.result.tree.StackTraceData;
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
-import io.github.terahidro2003.result.tree.StackTraceTreePayload;
+import io.github.terahidro2003.result.tree.data.StackTraceData;
+import io.github.terahidro2003.result.tree.data.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.data.StackTraceTreePayload;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class StackTraceDataTreeBuilder extends StackTraceTreeBuilder {
-    public StackTraceDataTreeBuilder() {
+public class StackTraceDataTreeGenerator extends StackTraceTreeGenerator {
+    public StackTraceDataTreeGenerator() {
         super();
     }
 

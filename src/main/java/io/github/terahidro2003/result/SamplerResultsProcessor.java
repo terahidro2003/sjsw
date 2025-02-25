@@ -2,8 +2,8 @@ package io.github.terahidro2003.result;
 
 import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.result.tree.TreeUtils;
-import io.github.terahidro2003.result.tree.builder.StackTraceModelTreeBuilder;
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.generator.StackTraceModelTreeGenerator;
+import io.github.terahidro2003.result.tree.data.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerHelper;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
 import io.github.terahidro2003.utils.FileUtils;
@@ -31,8 +31,7 @@ public class SamplerResultsProcessor {
             IItemCollection items = JfrLoaderToolkit.loadEvents(jfrs);
             IItemCollection filteredItems = items.apply(JdkFilters.EXECUTION_SAMPLE);
             FrameSeparator frameSeparator = new FrameSeparator(FrameSeparator.FrameCategorization.METHOD, false);
-            StacktraceTreeModel model = new StacktraceTreeModel(filteredItems, frameSeparator);
-            return model;
+            return new StacktraceTreeModel(filteredItems, frameSeparator);
         } catch (IOException | CouldNotLoadRecordingException e) {
             log.error("Failed to load JFR", e);
             throw new RuntimeException(e);
@@ -41,8 +40,7 @@ public class SamplerResultsProcessor {
 
     public StackTraceTreeNode getTreeFromJfr(List<File> jfrs) {
         StacktraceTreeModel model = jfrToStacktraceGraph(jfrs);
-        StackTraceTreeNode tree = StackTraceModelTreeBuilder.buildFromStacktraceTreeModel(model);
-        return tree;
+        return StackTraceModelTreeGenerator.buildFromStacktraceTreeModel(model);
     }
 
     public List<File> listJfrMeasurementFiles(Path directory, List<String> containables) {
@@ -82,7 +80,6 @@ public class SamplerResultsProcessor {
     /**
      *
      * @param jfrFile - json file containing samples derived from JFR file
-     * @return
      */
     public List<ExecutionSample> readJfrFile(File jfrFile) {
         try {

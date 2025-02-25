@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.result.SamplerResultsProcessor;
-import io.github.terahidro2003.result.tree.StackTraceData;
-import io.github.terahidro2003.result.tree.builder.ExecutionSampleTreeBuilder;
-import io.github.terahidro2003.result.tree.builder.StackTraceDataTreeBuilder;
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.data.StackTraceData;
+import io.github.terahidro2003.result.tree.generator.ExecutionSampleTreeGenerator;
+import io.github.terahidro2003.result.tree.generator.StackTraceDataTreeGenerator;
+import io.github.terahidro2003.result.tree.data.StackTraceTreeNode;
 import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
 import io.github.terahidro2003.utils.CommandStarter;
@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+
+import static io.github.terahidro2003.utils.FileUtils.configureResultsFolder;
 
 public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
@@ -69,19 +71,6 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         execute(config, duration, 1, 1, "00000", "11111");
     }
 
-    private void configureResultsFolder(Config config) {
-        if (config.outputPath().isEmpty()) {
-            throw new IllegalArgumentException("No output path specified");
-        }
-
-        File outputFolder = new File(config.outputPath());
-        if (!outputFolder.exists()) {
-            if (!outputFolder.mkdirs()) {
-                throw new IllegalStateException("Failed to create output folder: " + outputFolder.getAbsolutePath());
-            }
-        }
-    }
-
     @Override
     public void execute(Config config, Duration duration, int vmId, int vms, String commit, String oldCommit) throws InterruptedException, IOException {
         configureResultsFolder(config);
@@ -116,7 +105,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
 
             SamplerResultsProcessor samplerResultsProcessor = new SamplerResultsProcessor();
             List<ExecutionSample> jfrSamples = samplerResultsProcessor.readJfrFile(new File(jfr_json));
-            ExecutionSampleTreeBuilder stackTraceTreeBuilder = new ExecutionSampleTreeBuilder();
+            ExecutionSampleTreeGenerator stackTraceTreeBuilder = new ExecutionSampleTreeGenerator();
             var tree = stackTraceTreeBuilder.buildFromExecutionSamples(jfrSamples);
             root = tree;
             tree.printTree();
@@ -169,7 +158,7 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
     }
 
     private StackTraceTreeNode generateTree(List<StackTraceData> samples) {
-        StackTraceDataTreeBuilder stackTraceTreeBuilder = new StackTraceDataTreeBuilder();
+        StackTraceDataTreeGenerator stackTraceTreeBuilder = new StackTraceDataTreeGenerator();
         return stackTraceTreeBuilder.build(samples);
     }
 
@@ -261,6 +250,13 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         return root;
     }
 
+    /**
+     * Sets the default maximum sampling duration of 10 seconds
+     * if supplied duration is invalid. For duration to be considered as invalid,
+     * it has to be either null or have a negative value
+     * @param duration chosen duration
+     * @return either supplied or default maximum sampling duration
+     */
     private Duration chooseDuration(Duration duration) {
         if(duration == null || duration.getSeconds() <= 0) {
             log.warn("No duration was specified. Setting default sampling duration of 10 seconds.");
@@ -271,6 +267,12 @@ public class AsyncProfilerExecutor implements SamplerExecutorPipeline {
         return duration;
     }
 
+    /**
+     * Downloads async-profiler automatically, if profiler path is not set in the configuration.
+     * @param config SJSW configuration
+     * @return SJSW configuration with updated profiler path
+     * @throws IOException thrown in case the download, compression or other IO operation fail
+     */
     private Config retrieveAsyncProfiler(Config config) throws IOException {
         if (config.profilerPath() == null || config.profilerPath().isEmpty()) {
             File folder = new File(config.outputPath() + "/executables");

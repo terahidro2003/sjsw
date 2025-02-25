@@ -1,19 +1,42 @@
-package io.github.terahidro2003.result.tree.builder;
+package io.github.terahidro2003.result.tree.generator;
 
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
-import io.github.terahidro2003.result.tree.StackTraceTreePayload;
+import io.github.terahidro2003.result.tree.collections.ExecutionSamplesCollection;
+import io.github.terahidro2003.result.tree.data.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.data.StackTraceTreePayload;
 import io.github.terahidro2003.samplers.jfr.ExecutionSample;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ExecutionSampleTreeBuilder extends StackTraceTreeBuilder {
-    public ExecutionSampleTreeBuilder() {
+public class ExecutionSampleTreeGenerator
+        extends StackTraceTreeGenerator<ExecutionSamplesCollection> {
+
+    List<ExecutionSample> executionSamples;
+
+    public ExecutionSampleTreeGenerator() {
         super();
     }
 
-    public StackTraceTreeNode buildFromExecutionSamples(List<ExecutionSample> samples) {
+    @Override
+    public void addData(ExecutionSamplesCollection data) {
+        if (executionSamples == null) {
+            executionSamples = new ArrayList<>();
+        }
+
+        if (data.getData().getFirst() != null && data.getData().getFirst() instanceof ExecutionSample) {
+
+        }
+
+        executionSamples = data.getData();
+    }
+
+    @Override
+    public StackTraceTreeNode build() {
+        return null;
+    }
+
+    private StackTraceTreeNode buildFromExecutionSamples(List<ExecutionSample> samples) {
         samples.forEach(sample -> {
             Collections.reverse(sample.getStackTrace());
         });

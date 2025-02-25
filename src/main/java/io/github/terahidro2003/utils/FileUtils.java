@@ -1,5 +1,6 @@
 package io.github.terahidro2003.utils;
 
+import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.config.Constants;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
@@ -114,6 +115,19 @@ public class FileUtils {
         boolean success = original.renameTo(newFile);
         if (!success) {
             throw new IOException("Failed to rename " + original.getName() + " to " + newName);
+        }
+    }
+
+    public static void configureResultsFolder(Config config) {
+        if (config.outputPath().isEmpty()) {
+            throw new IllegalArgumentException("No output path specified");
+        }
+
+        File outputFolder = new File(config.outputPath());
+        if (!outputFolder.exists()) {
+            if (!outputFolder.mkdirs()) {
+                throw new IllegalStateException("Failed to create output folder: " + outputFolder.getAbsolutePath());
+            }
         }
     }
 }

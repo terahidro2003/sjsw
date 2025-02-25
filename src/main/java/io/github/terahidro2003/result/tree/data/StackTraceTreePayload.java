@@ -1,4 +1,4 @@
-package io.github.terahidro2003.result.tree;
+package io.github.terahidro2003.result.tree.data;
 
 public class StackTraceTreePayload {
     private String methodName;

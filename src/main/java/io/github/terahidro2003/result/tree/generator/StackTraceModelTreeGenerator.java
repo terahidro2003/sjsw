@@ -1,7 +1,7 @@
-package io.github.terahidro2003.result.tree.builder;
+package io.github.terahidro2003.result.tree.generator;
 
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
-import io.github.terahidro2003.result.tree.StackTraceTreePayload;
+import io.github.terahidro2003.result.tree.data.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.data.StackTraceTreePayload;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.AggregatableFrame;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.Node;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.StacktraceTreeModel;
@@ -9,8 +9,8 @@ import org.openjdk.jmc.flightrecorder.stacktrace.tree.StacktraceTreeModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StackTraceModelTreeBuilder extends StackTraceTreeBuilder {
-    public StackTraceModelTreeBuilder() {
+public class StackTraceModelTreeGenerator extends StackTraceTreeGenerator {
+    public StackTraceModelTreeGenerator() {
         super();
     }
 

@@ -1,15 +1,15 @@
-package io.github.terahidro2003.result.tree.builder;
+package io.github.terahidro2003.result.tree.generator;
 
 import io.github.terahidro2003.result.SamplerResultsProcessor;
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.data.StackTraceTreeNode;
 import io.github.terahidro2003.result.tree.TreeUtils;
 
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class VmContextTreeBuilder extends StackTraceTreeBuilder {
-    public VmContextTreeBuilder() {
+public class VmContextTreeGenerator extends StackTraceTreeGenerator {
+    public VmContextTreeGenerator() {
         super();
     }
 

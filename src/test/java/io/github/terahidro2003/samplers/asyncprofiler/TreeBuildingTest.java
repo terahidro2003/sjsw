@@ -1,15 +1,15 @@
 package io.github.terahidro2003.samplers.asyncprofiler;
 
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
-import io.github.terahidro2003.result.tree.builder.IterativeContextTreeBuilder;
-import io.github.terahidro2003.result.tree.builder.VmContextTreeBuilder;
+import io.github.terahidro2003.result.tree.data.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.generator.IterativeContextTreeGenerator;
+import io.github.terahidro2003.result.tree.generator.VmContextTreeGenerator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.*;
 
-import static io.github.terahidro2003.result.tree.builder.IterativeContextTreeBuilder.extractVmNumber;
+import static io.github.terahidro2003.result.tree.generator.IterativeContextTreeGenerator.extractVmNumber;
 
 public class TreeBuildingTest {
 
@@ -23,7 +23,7 @@ public class TreeBuildingTest {
                 new File(resourcesDir + "/1111_2.jfr")
         );
 
-        VmContextTreeBuilder builder = new VmContextTreeBuilder();
+        VmContextTreeGenerator builder = new VmContextTreeGenerator();
 
         StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 2, testcase, false);
 
@@ -40,7 +40,7 @@ public class TreeBuildingTest {
             jfrs.add(new File(resourcesDir + "/1111_" + i + ".jfr"));
         }
 
-        VmContextTreeBuilder builder = new VmContextTreeBuilder();
+        VmContextTreeGenerator builder = new VmContextTreeGenerator();
         StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 5, testcase, false);
 
         System.out.println();
@@ -54,7 +54,7 @@ public class TreeBuildingTest {
         File folder = new File(resourcesDir + "/iterativeSamples");
         List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
 
-        IterativeContextTreeBuilder builder = new IterativeContextTreeBuilder();
+        IterativeContextTreeGenerator builder = new IterativeContextTreeGenerator();
         StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "55bbfafd67ee1f7dc721ea945714a324708787c6", testcase, false);
 
         System.out.println();
@@ -70,7 +70,7 @@ public class TreeBuildingTest {
             jfrs.add(new File(resourcesDir + "/1111 (" + i + ").jfr"));
         }
 
-        VmContextTreeBuilder builder = new VmContextTreeBuilder();
+        VmContextTreeGenerator builder = new VmContextTreeGenerator();
         StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "1111", 20, testcase, false);
 
         System.out.println();

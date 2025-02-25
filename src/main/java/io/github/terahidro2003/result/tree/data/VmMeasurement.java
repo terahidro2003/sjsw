@@ -1,4 +1,4 @@
-package io.github.terahidro2003.result.tree;
+package io.github.terahidro2003.result.tree.data;
 
 import java.util.ArrayList;
 import java.util.List;

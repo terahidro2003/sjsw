@@ -1,6 +1,6 @@
 package io.github.terahidro2003.result.tree;
 
-import io.github.terahidro2003.result.tree.builder.StackTraceTreeBuilder;
+import io.github.terahidro2003.result.tree.data.StackTraceTreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

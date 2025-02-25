@@ -1,9 +1,9 @@
-package io.github.terahidro2003.result.tree.builder;
+package io.github.terahidro2003.result.tree.generator;
 
 import io.github.terahidro2003.result.SamplerResultsProcessor;
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
+import io.github.terahidro2003.result.tree.data.StackTraceTreeNode;
 import io.github.terahidro2003.result.tree.TreeUtils;
-import io.github.terahidro2003.result.tree.VmMeasurement;
+import io.github.terahidro2003.result.tree.data.VmMeasurement;
 
 import java.io.File;
 import java.util.*;
@@ -11,14 +11,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
-    private final StackTraceTreeBuilder delegate;
+public class IterativeContextTreeGenerator extends StackTraceTreeGenerator {
+    private final StackTraceTreeGenerator delegate;
 
-    public IterativeContextTreeBuilder(final StackTraceTreeBuilder delegate) {
+    public IterativeContextTreeGenerator(final StackTraceTreeGenerator delegate) {
         this.delegate = delegate;
     }
 
-    public IterativeContextTreeBuilder() {
+    public IterativeContextTreeGenerator() {
         this.delegate = null;
     }
 
