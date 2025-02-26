@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class StackTraceTreeNode {
+    @Getter
+    private final List<String> parentMethodNames = new ArrayList<>();
+
     private StackTraceTreeNode parent;
     @Getter
     @Setter
@@ -31,6 +34,10 @@ public class StackTraceTreeNode {
         this.parent = parent;
         this.children = children;
         this.payload = payload;
+        if(parent != null) {
+            this.parentMethodNames.addAll(parent.parentMethodNames);
+        }
+        this.parentMethodNames.add(this.payload.getMethodName());
     }
 
     public void printTree() {
@@ -85,17 +92,6 @@ public class StackTraceTreeNode {
 
     public void resetVmMeasurements() {
         this.vmMeasurements = new HashMap<>();
-    }
-
-    public List<String> getParentMethodNames() {
-        List<String> parentMethodNames = new ArrayList<>();
-        if(parent != null) {
-            parentMethodNames = parent.getParentMethodNames();
-
-        } else {
-            parentMethodNames.add(this.payload.getMethodName());
-        }
-        return parentMethodNames;
     }
 
     @Override
