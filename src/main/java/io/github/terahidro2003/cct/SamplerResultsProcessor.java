@@ -1,7 +1,6 @@
 package io.github.terahidro2003.cct;
 
 import io.github.terahidro2003.cct.builder.StackTraceModelTreeBuilder;
-import io.github.terahidro2003.cct.jfr.ExecutionSample;
 import io.github.terahidro2003.cct.result.StackTraceTreeNode;
 import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.measurement.executor.asprof.AsyncProfilerHelper;
