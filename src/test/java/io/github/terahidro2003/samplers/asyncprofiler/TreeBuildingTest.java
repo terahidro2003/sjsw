@@ -1,16 +1,19 @@
 package io.github.terahidro2003.samplers.asyncprofiler;
 
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
-import io.github.terahidro2003.result.tree.builder.IterativeContextTreeBuilder;
-import io.github.terahidro2003.result.tree.builder.VmContextTreeBuilder;
+import io.github.terahidro2003.cct.builder.IterativeContextTreeBuilder;
+import io.github.terahidro2003.cct.builder.VmContextTreeBuilder;
+import io.github.terahidro2003.cct.result.StackTraceTreeNode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.io.File;
 import java.util.*;
 
-import static io.github.terahidro2003.result.tree.builder.IterativeContextTreeBuilder.extractVmNumber;
+import static io.github.terahidro2003.cct.builder.IterativeContextTreeBuilder.extractVmNumber;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class TreeBuildingTest {
 
     final File resourcesDir = new File("src/test/resources");
