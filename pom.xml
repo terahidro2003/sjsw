@@ -54,6 +54,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+        </dependency>
+        <dependency>
             <groupId>tools.profiler</groupId>
             <artifactId>async-profiler</artifactId>
             <version>3.0</version>
