@@ -29,6 +29,9 @@ public class VmContextTreeBuilder extends StackTraceTreeBuilder {
         for (int i = 0; i<vms; i++) {
             log.info("Building local tree for VM: {} from JFR file: {}", i, jfrs.get(i).getName());
             StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
+            System.out.println();
+            System.out.println("FULL VM TREE: " + i);
+            vmTree.printTree();
             vmTrees.add(vmTree);
         }
 
@@ -46,7 +49,7 @@ public class VmContextTreeBuilder extends StackTraceTreeBuilder {
     }
 
     private StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
-        StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr));
+        StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr), testcase);
 
         // retrieves subtrees that share the same parent node
         log.info("Filtering and retrieving diverted testcase method subtrees");

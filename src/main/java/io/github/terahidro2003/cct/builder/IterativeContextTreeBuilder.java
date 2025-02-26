@@ -21,6 +21,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
             throw new RuntimeException("JFR files cannot be empty");
         }
 
+        // Gather only JFR files containing a commit hash in the filename
         jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit))
                 .collect(Collectors.toCollection(ArrayList::new));
         log.info("Filtered JFRs for tree generation: {}", jfrs);
@@ -54,7 +55,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
     }
 
     public StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
-        StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr));
+        StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr), testcase);
         String filename = jfr.getName();
         int vm = extractVmNumber(filename);
 

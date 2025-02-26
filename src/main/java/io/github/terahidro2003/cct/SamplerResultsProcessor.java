@@ -7,8 +7,11 @@ import io.github.terahidro2003.measurement.executor.asprof.AsyncProfilerHelper;
 import io.github.terahidro2003.utils.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.openjdk.jmc.common.item.IItemCollection;
+import org.openjdk.jmc.common.item.IItemFilter;
+import org.openjdk.jmc.common.item.ItemFilters;
 import org.openjdk.jmc.flightrecorder.CouldNotLoadRecordingException;
 import org.openjdk.jmc.flightrecorder.JfrLoaderToolkit;
+import org.openjdk.jmc.flightrecorder.jdk.JdkAttributes;
 import org.openjdk.jmc.flightrecorder.jdk.JdkFilters;
 import org.openjdk.jmc.flightrecorder.stacktrace.FrameSeparator;
 import org.openjdk.jmc.flightrecorder.stacktrace.tree.StacktraceTreeModel;
@@ -24,21 +27,24 @@ import java.util.Objects;
 @Slf4j
 public class SamplerResultsProcessor {
 
-    public StacktraceTreeModel jfrToStacktraceGraph(List<File> jfrs) {
+    public StacktraceTreeModel jfrToStacktraceGraph(List<File> jfrs, String... rootMethod) {
         try {
             IItemCollection items = JfrLoaderToolkit.loadEvents(jfrs);
             IItemCollection filteredItems = items.apply(JdkFilters.EXECUTION_SAMPLE);
+            if(rootMethod.length > 0) {
+                IItemFilter rootMethodFilter = ItemFilters.contains(JdkAttributes.STACK_TRACE_STRING, rootMethod[0]);
+                filteredItems = items.apply(rootMethodFilter);
+            }
             FrameSeparator frameSeparator = new FrameSeparator(FrameSeparator.FrameCategorization.METHOD, false);
-            StacktraceTreeModel model = new StacktraceTreeModel(filteredItems, frameSeparator);
-            return model;
+            return new StacktraceTreeModel(filteredItems, frameSeparator);
         } catch (IOException | CouldNotLoadRecordingException e) {
             log.error("Failed to load JFR", e);
             throw new RuntimeException(e);
         }
     }
 
-    public StackTraceTreeNode getTreeFromJfr(List<File> jfrs) {
-        StacktraceTreeModel model = jfrToStacktraceGraph(jfrs);
+    public StackTraceTreeNode getTreeFromJfr(List<File> jfrs, String... rootMethod) {
+        StacktraceTreeModel model = jfrToStacktraceGraph(jfrs, rootMethod);
         StackTraceTreeNode tree = StackTraceModelTreeBuilder.buildFromStacktraceTreeModel(model);
         return tree;
     }
@@ -76,7 +82,6 @@ public class SamplerResultsProcessor {
 
         return true;
     }
-
 
 
     public StackTraceTreeNode filterTestcaseSubtree(String testcase, StackTraceTreeNode bat) {
