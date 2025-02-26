@@ -1,9 +1,10 @@
-package io.github.terahidro2003.result.tree.builder;
+package io.github.terahidro2003.cct.builder;
 
-import io.github.terahidro2003.result.SamplerResultsProcessor;
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
-import io.github.terahidro2003.result.tree.TreeUtils;
-import io.github.terahidro2003.result.tree.VmMeasurement;
+import io.github.terahidro2003.cct.SamplerResultsProcessor;
+import io.github.terahidro2003.cct.TreeUtils;
+import io.github.terahidro2003.cct.result.StackTraceTreeNode;
+import io.github.terahidro2003.cct.result.VmMeasurement;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.*;
@@ -11,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
     private final StackTraceTreeBuilder delegate;
 

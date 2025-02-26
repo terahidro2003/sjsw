@@ -1,12 +1,12 @@
-package io.github.terahidro2003.result;
+package io.github.terahidro2003.cct;
 
+import io.github.terahidro2003.cct.builder.StackTraceModelTreeBuilder;
+import io.github.terahidro2003.cct.jfr.ExecutionSample;
+import io.github.terahidro2003.cct.result.StackTraceTreeNode;
 import io.github.terahidro2003.config.Config;
-import io.github.terahidro2003.result.tree.TreeUtils;
-import io.github.terahidro2003.result.tree.builder.StackTraceModelTreeBuilder;
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
-import io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerHelper;
-import io.github.terahidro2003.samplers.jfr.ExecutionSample;
+import io.github.terahidro2003.measurement.executor.asprof.AsyncProfilerHelper;
 import io.github.terahidro2003.utils.FileUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.openjdk.jmc.common.item.IItemCollection;
 import org.openjdk.jmc.flightrecorder.CouldNotLoadRecordingException;
 import org.openjdk.jmc.flightrecorder.JfrLoaderToolkit;
@@ -22,8 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerExecutor.log;
-
+@Slf4j
 public class SamplerResultsProcessor {
 
     public StacktraceTreeModel jfrToStacktraceGraph(List<File> jfrs) {
@@ -79,32 +78,7 @@ public class SamplerResultsProcessor {
         return true;
     }
 
-    /**
-     *
-     * @param jfrFile - json file containing samples derived from JFR file
-     * @return
-     */
-    public List<ExecutionSample> readJfrFile(File jfrFile) {
-        try {
-            log.info("Reading serialized sample json file {}", jfrFile.getName());
-            List<ExecutionSample> samples = ExecutionSample.parseJson(jfrFile.getAbsolutePath());
-            log.info("Loaded {} samples", samples.size());
-            return samples;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
-    public List<ExecutionSample> getExecutionSamplesFromMultipleJsons(List<File> serializedSamples) {
-        List<ExecutionSample> samples = new ArrayList<>();
-        log.info("Reading serialized sample json files");
-        for (File file : serializedSamples) {
-            samples.addAll(readJfrFile(file));
-        }
-        log.info("Loaded {} samples", samples.size());
-        return samples;
-    }
 
     public StackTraceTreeNode filterTestcaseSubtree(String testcase, StackTraceTreeNode bat) {
         return TreeUtils.search(testcase, bat);

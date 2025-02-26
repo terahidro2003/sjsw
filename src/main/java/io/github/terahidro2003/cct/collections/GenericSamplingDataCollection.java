@@ -1,4 +1,4 @@
-package io.github.terahidro2003.result.tree.collections;
+package io.github.terahidro2003.cct.collections;
 
 import java.util.List;
 

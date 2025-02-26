@@ -1,14 +1,15 @@
-package io.github.terahidro2003.samplers.asyncprofiler;
+package io.github.terahidro2003.measurement.executor.asprof;
 
 import io.github.terahidro2003.config.Config;
+import io.github.terahidro2003.measurement.data.MeasurementInformation;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 
-import static io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerExecutor.log;
-
+@Slf4j
 public class AsyncProfilerHelper {
     final Config config;
 

@@ -1,25 +1,38 @@
-package io.github.terahidro2003.result.tree.builder;
+package io.github.terahidro2003.cct.builder;
 
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
-import io.github.terahidro2003.result.tree.StackTraceTreePayload;
-import io.github.terahidro2003.samplers.jfr.ExecutionSample;
+import io.github.terahidro2003.cct.SamplerResultsProcessor;
+import io.github.terahidro2003.cct.jfr.ExecutionSample;
+import io.github.terahidro2003.cct.result.StackTraceTreeNode;
+import io.github.terahidro2003.cct.result.StackTraceTreePayload;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 public class ExecutionSampleTreeBuilder extends StackTraceTreeBuilder {
     public ExecutionSampleTreeBuilder() {
         super();
     }
 
+    public StackTraceTreeNode buildFromSerializedExecutionSamplesFile(@NonNull File file) {
+        List<ExecutionSample> jfrSamples = readJfrExecutionSamplesJsonFile(file);
+        return buildFromExecutionSamples(jfrSamples);
+    }
+
     public StackTraceTreeNode buildFromExecutionSamples(List<ExecutionSample> samples) {
+        StackTraceTreeNode root = new StackTraceTreeNode(null, new ArrayList<>(),
+                new StackTraceTreePayload("root"));
         samples.forEach(sample -> {
             Collections.reverse(sample.getStackTrace());
         });
 
         samples.forEach(sample -> {
-            addExecutionSample(super.root, sample);
+            addExecutionSample(root, sample);
         });
         return root;
     }
@@ -32,9 +45,6 @@ public class ExecutionSampleTreeBuilder extends StackTraceTreeBuilder {
 
         // get measurement properties
         var methodNames =  sample.getMethodSignatures();
-        var timeTaken = 1;
-        var amountOfSamples = 1;
-        var percentageOfSamples = 0;
 
         // If sample has no methodNames, return.
         // Maybe consider throwing some exception at this point?
@@ -68,5 +78,33 @@ public class ExecutionSampleTreeBuilder extends StackTraceTreeBuilder {
 
         // recursive call
         addExecutionSample(child, sample);
+    }
+
+
+    /**
+     *
+     * @param jfrFile - json file containing samples derived from JFR file
+     * @return
+     */
+    private List<ExecutionSample> readJfrExecutionSamplesJsonFile(File jfrFile) {
+        try {
+            log.info("Reading serialized sample json file {}", jfrFile.getName());
+            List<ExecutionSample> samples = ExecutionSample.parseJson(jfrFile.getAbsolutePath());
+            log.info("Loaded {} samples", samples.size());
+            return samples;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private List<ExecutionSample> getExecutionSamplesFromMultipleJsons(List<File> serializedSamples) {
+        List<ExecutionSample> samples = new ArrayList<>();
+        log.info("Reading serialized sample json files");
+        for (File file : serializedSamples) {
+            samples.addAll(readJfrExecutionSamplesJsonFile(file));
+        }
+        log.info("Loaded {} samples", samples.size());
+        return samples;
     }
 }

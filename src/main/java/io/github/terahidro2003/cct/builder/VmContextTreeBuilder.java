@@ -1,19 +1,19 @@
-package io.github.terahidro2003.result.tree.builder;
+package io.github.terahidro2003.cct.builder;
 
-import io.github.terahidro2003.result.SamplerResultsProcessor;
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
-import io.github.terahidro2003.result.tree.TreeUtils;
+import io.github.terahidro2003.cct.SamplerResultsProcessor;
+import io.github.terahidro2003.cct.TreeUtils;
+import io.github.terahidro2003.cct.result.StackTraceTreeNode;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class VmContextTreeBuilder extends StackTraceTreeBuilder {
-    public VmContextTreeBuilder() {
-        super();
-    }
 
-    public StackTraceTreeNode buildTree(List<File> jfrs, String commit, int vms, String testcase,
+    public StackTraceTreeNode buildTree(@NonNull List<File> jfrs, @NonNull String commit, int vms, @NonNull String testcase,
                                         boolean filterJvmNativeNodes) {
         log.info("Building tree for testcase method: {}", testcase);
         if (jfrs.isEmpty()) {
@@ -45,7 +45,7 @@ public class VmContextTreeBuilder extends StackTraceTreeBuilder {
         return mergedTree;
     }
 
-    public StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
+    private StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
         StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr));
 
         // retrieves subtrees that share the same parent node
@@ -54,7 +54,7 @@ public class VmContextTreeBuilder extends StackTraceTreeBuilder {
         return TreeUtils.mergeTrees(filteredSubtrees);
     }
 
-    public Map<List<String>, List<Double>> createMeasurementsMap(List<StackTraceTreeNode> localTrees,
+    private Map<List<String>, List<Double>> createMeasurementsMap(List<StackTraceTreeNode> localTrees,
                                                                  String testcaseSignature) {
         Map<List<String>, List<Double>> measurementsMap = new HashMap<>();
         for (StackTraceTreeNode localTree : localTrees) {
@@ -93,7 +93,7 @@ public class VmContextTreeBuilder extends StackTraceTreeBuilder {
         return measurementsMap;
     }
 
-    public void addLocalMeasurements(StackTraceTreeNode bat, Map<List<String>, List<Double>> measurementsMap, String identifier) {
+    private void addLocalMeasurements(StackTraceTreeNode bat, Map<List<String>, List<Double>> measurementsMap, String identifier) {
         if (bat == null || measurementsMap == null) {
             throw new IllegalArgumentException("BAT and measurements map cannot be null");
         }

@@ -1,6 +1,7 @@
-package io.github.terahidro2003;
+package io.github.terahidro2003.measurement.executor.asprof;
 
 import io.github.terahidro2003.config.Constants;
+import io.github.terahidro2003.measurement.executor.SjswInterProcessExecutor;
 import one.profiler.AsyncProfiler;
 
 import java.io.File;
@@ -9,8 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class SamplingResultsAnalyzer implements SamplingMeasurementPipeline {
-
+public class AsprofInterProcessExecutor implements SjswInterProcessExecutor {
     private final AsyncProfiler asyncProfiler = getAsProfInstance();
 
     @Override
@@ -40,19 +40,19 @@ public class SamplingResultsAnalyzer implements SamplingMeasurementPipeline {
 
     @Override
     public void measure(File resultFile, int interval) {
-       if (resultFile == null) {
-           throw new NullPointerException("resultFile");
-       }
+        if (resultFile == null) {
+            throw new NullPointerException("resultFile");
+        }
 
-       if (!resultFile.exists()) {
-           throw new IllegalArgumentException("resultFile does not exist");
-       }
+        if (!resultFile.exists()) {
+            throw new IllegalArgumentException("resultFile does not exist");
+        }
 
-       try {
-           asyncProfiler.execute("start,jfr,interval=" + interval + ",event=wall,cstack=dwarf,file=" + resultFile.getAbsolutePath());
-       } catch (Exception e) {
-           e.printStackTrace();
-       }
+        try {
+            asyncProfiler.execute("start,jfr,interval=" + interval + ",event=wall,cstack=dwarf,file=" + resultFile.getAbsolutePath());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

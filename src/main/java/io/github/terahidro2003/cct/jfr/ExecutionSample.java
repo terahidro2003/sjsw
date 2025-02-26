@@ -1,8 +1,9 @@
-package io.github.terahidro2003.samplers.jfr;
+package io.github.terahidro2003.cct.jfr;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.terahidro2003.config.Constants;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,8 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.github.terahidro2003.samplers.asyncprofiler.AsyncProfilerExecutor.log;
-
+@Slf4j
 public class ExecutionSample {
     private String timestamp;
     private String sampledThread;

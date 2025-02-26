@@ -1,6 +1,6 @@
-package io.github.terahidro2003.result.tree.collections;
+package io.github.terahidro2003.cct.collections;
 
-import io.github.terahidro2003.samplers.jfr.ExecutionSample;
+import io.github.terahidro2003.cct.jfr.ExecutionSample;
 
 import java.util.List;
 
