@@ -1,6 +1,8 @@
 package io.github.terahidro2003.cct.result;
 
-public class StackTraceTreePayload {
+import java.io.Serializable;
+
+public class StackTraceTreePayload implements Serializable {
     private String methodName;
     private int vm;
 

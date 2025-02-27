@@ -1,9 +1,10 @@
 package io.github.terahidro2003.cct.result;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VmMeasurement {
+public class VmMeasurement implements Serializable {
     List<Double> measurements = new ArrayList<Double>();
     int vm;
 
