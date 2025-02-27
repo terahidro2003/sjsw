@@ -8,6 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -15,23 +19,30 @@ import java.util.stream.Collectors;
 @Slf4j
 public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
 
-    public StackTraceTreeNode buildTree(List<File> jfrs, String commit, String testcase, boolean filterJvmNativeNodes) {
+    public StackTraceTreeNode buildTree(List<File> jfrs, String commit, String testcase, boolean filterJvmNativeNodes,
+                                        boolean parallelProcessing, int maxThreads) {
         log.info("Building tree for testcase method: {}", testcase);
         if (jfrs.isEmpty()) {
             throw new RuntimeException("JFR files cannot be empty");
         }
 
         // Gather only JFR files containing a commit hash in the filename
-        jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit))
+        jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit) && jfr.getName().endsWith(".jfr"))
                 .collect(Collectors.toCollection(ArrayList::new));
         log.info("Filtered JFRs for tree generation: {}", jfrs);
 
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
         List<StackTraceTreeNode> vmTrees = new ArrayList<>();
-        for (int i = 0; i<jfrs.size(); i++) {
-            log.info("Building local tree for index: {} from JFR file: {}", i, jfrs.get(i).getName());
-            StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
-            vmTrees.add(vmTree);
+
+        if(parallelProcessing) {
+            int hardwareCoreCount = Runtime.getRuntime().availableProcessors();
+            runParallelVm(jfrs, testcase, vmTrees, maxThreads > 0 ? maxThreads : hardwareCoreCount);
+        } else {
+            for (int i = 0; i<jfrs.size(); i++) {
+                log.info("Building local tree for index: {} from JFR file: {}", i, jfrs.get(i).getName());
+                StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
+                vmTrees.add(vmTree);
+            }
         }
 
         // filters out common JVM and native method call nodes from all retrieved subtrees
@@ -54,8 +65,37 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         return Integer.parseInt(matcher.group(1));
     }
 
+    private void runParallelVm(List<File> jfrs, String testcase, List<StackTraceTreeNode> vmTrees, int maxThreads) {
+        ExecutorService executorService = Executors.newFixedThreadPool(maxThreads);
+        List<Future<StackTraceTreeNode>> futures = new ArrayList<>();
+
+        for (File jfr : jfrs) {
+            futures.add(executorService.submit(() -> {
+                SamplerResultsProcessor processor = new SamplerResultsProcessor();
+                log.info("Building local tree for JFR file: {}", jfr.getName());
+                return buildVmTree(jfr, processor, testcase);
+            }));
+        }
+
+        for (Future<StackTraceTreeNode> future : futures) {
+            try {
+                StackTraceTreeNode vmTree = future.get();
+                if (vmTree != null) {
+                    synchronized (vmTrees) {
+                        vmTrees.add(vmTree);
+                    }
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Error processing JFR file", e);
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        executorService.shutdown();
+    }
+
     public StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
-        StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr), testcase);
+        StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr));
         String filename = jfr.getName();
         int vm = extractVmNumber(filename);
 

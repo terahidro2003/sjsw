@@ -58,7 +58,35 @@ public class TreeBuildingTest {
         List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
 
         IterativeContextTreeBuilder builder = new IterativeContextTreeBuilder();
-        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "55bbfafd67ee1f7dc721ea945714a324708787c6", testcase, false);
+        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "55bbfafd67ee1f7dc721ea945714a324708787c6", testcase, false, true, 0);
+
+        System.out.println();
+        System.out.println();
+        mergedTree.printTree();
+    }
+
+    @Test
+    public void testIterativeTreeMaxi() {
+        String testcase = "testMe()";
+        File folder = new File("/home/hellstone/typ/data/juozas_test_project_peass/logs/rcaLogs/7556a2d6c9b729ab6f04f26bc8ed0aaee2c06dec/de.dagere.peass.MainTest/testMe/0/sjsw-results/measurement_3de635a0-28d6-44a9-9b89-011cf51ad413");
+        List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
+
+        IterativeContextTreeBuilder builder = new IterativeContextTreeBuilder();
+        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "a8f0722f92d9e089d8d856f33313c0c2c2572f10", testcase, false, false, 0);
+
+        System.out.println();
+        System.out.println();
+        mergedTree.printTree();
+    }
+
+    @Test
+    public void testIterativeTreeMaxiParallel() {
+        String testcase = "testMe()";
+        File folder = new File("/home/hellstone/typ/data/juozas_test_project_peass/logs/rcaLogs/7556a2d6c9b729ab6f04f26bc8ed0aaee2c06dec/de.dagere.peass.MainTest/testMe/0/sjsw-results/measurement_3de635a0-28d6-44a9-9b89-011cf51ad413");
+        List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
+
+        IterativeContextTreeBuilder builder = new IterativeContextTreeBuilder();
+        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "a8f0722f92d9e089d8d856f33313c0c2c2572f10", testcase, false, true, 0);
 
         System.out.println();
         System.out.println();
