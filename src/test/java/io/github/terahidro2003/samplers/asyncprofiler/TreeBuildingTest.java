@@ -68,7 +68,7 @@ public class TreeBuildingTest {
     @Test
     public void testIterativeTreeMaxi() {
         String testcase = "testMe()";
-        File folder = new File("/home/hellstone/typ/data/juozas_test_project_peass/logs/rcaLogs/7556a2d6c9b729ab6f04f26bc8ed0aaee2c06dec/de.dagere.peass.MainTest/testMe/0/sjsw-results/measurement_3de635a0-28d6-44a9-9b89-011cf51ad413");
+        File folder = new File("\\\\wsl.localhost\\Ubuntu-22.04\\home\\hellstone\\typ\\data\\juozas_test_project_peass\\logs\\rcaLogs\\7556a2d6c9b729ab6f04f26bc8ed0aaee2c06dec\\de.dagere.peass.MainTest\\testMe\\0\\sjsw-results\\measurement_3de635a0-28d6-44a9-9b89-011cf51ad413");
         List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
 
         IterativeContextTreeBuilder builder = new IterativeContextTreeBuilder();
@@ -82,7 +82,7 @@ public class TreeBuildingTest {
     @Test
     public void testIterativeTreeMaxiParallel() {
         String testcase = "testMe()";
-        File folder = new File("/home/hellstone/typ/data/juozas_test_project_peass/logs/rcaLogs/7556a2d6c9b729ab6f04f26bc8ed0aaee2c06dec/de.dagere.peass.MainTest/testMe/0/sjsw-results/measurement_3de635a0-28d6-44a9-9b89-011cf51ad413");
+        File folder = new File("\\\\wsl.localhost\\Ubuntu-22.04\\home\\hellstone\\typ\\data\\juozas_test_project_peass\\logs\\rcaLogs\\7556a2d6c9b729ab6f04f26bc8ed0aaee2c06dec\\de.dagere.peass.MainTest\\testMe\\0\\sjsw-results\\measurement_3de635a0-28d6-44a9-9b89-011cf51ad413");
         List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
 
         IterativeContextTreeBuilder builder = new IterativeContextTreeBuilder();
