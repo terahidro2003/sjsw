@@ -58,7 +58,7 @@ public class TreeBuildingTest {
         List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
 
         IterativeContextTreeBuilder builder = new IterativeContextTreeBuilder();
-        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "55bbfafd67ee1f7dc721ea945714a324708787c6", testcase, false, true, 0);
+        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "55bbfafd67ee1f7dc721ea945714a324708787c6", testcase, false, false, 0);
 
         System.out.println();
         System.out.println();

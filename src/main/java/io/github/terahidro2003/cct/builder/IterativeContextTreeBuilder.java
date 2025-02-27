@@ -30,6 +30,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
 
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
         final List<StackTraceTreeNode> vmTrees = new ArrayList<>();
+        StackTraceTreeNode mergedTree = null;
 
         if(parallelProcessing) {
             int hardwareCoreCount = Runtime.getRuntime().availableProcessors();
@@ -44,14 +45,18 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
                     vmTree = TreeUtils.filterJvmNodes(vmTree);
                 }
 
+                Map<List<String>, List<VmMeasurement>> measurementsMap
+                        = createMeasurementsMap(List.of(vmTree), testcase, false);
+
+                vmTrees.add(mergedTree);
                 vmTrees.add(vmTree);
+                mergedTree = TreeUtils.mergeTrees(vmTrees);
+                vmTrees.clear();
+                addLocalMeasurements(mergedTree, measurementsMap, commit, false);
             }
         }
 
-        Map<List<String>, List<VmMeasurement>> measurementsMap = createMeasurementsMap(vmTrees, testcase, false);
-        StackTraceTreeNode mergedTree = TreeUtils.mergeTrees(vmTrees);
 
-        addLocalMeasurements(mergedTree, measurementsMap, commit, false);
         return mergedTree;
     }
 
