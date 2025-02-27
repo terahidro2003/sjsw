@@ -1,5 +1,8 @@
 package io.github.terahidro2003.cct.result;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,34 +10,27 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class StackTraceTreeNode {
-    private final List<String> parentMethodNames = new ArrayList<>();
-
     private StackTraceTreeNode parent;
+    @Getter
+    @Setter
     private List<StackTraceTreeNode> children;
+    @Getter
     private StackTraceTreePayload payload;
 
+    @Setter
+    @Getter
     private Map<String, List<Double>> measurements = new HashMap<>();
+    @Getter
     private Map<String, List<VmMeasurement>> vmMeasurements = new HashMap<>();
 
+    @Setter
+    @Getter
     private Double initialWeight;
 
     public StackTraceTreeNode(StackTraceTreeNode parent, List<StackTraceTreeNode> children, StackTraceTreePayload payload) {
         this.parent = parent;
         this.children = children;
         this.payload = payload;
-
-        if(parent != null) {
-            this.parentMethodNames.addAll(parent.parentMethodNames);
-        }
-        this.parentMethodNames.add(this.payload.getMethodName());
-    }
-
-    public StackTraceTreePayload getPayload() {
-        return this.payload;
-    }
-
-    public List<StackTraceTreeNode> getChildren() {
-        return children;
     }
 
     public void printTree() {
@@ -91,48 +87,15 @@ public class StackTraceTreeNode {
         this.vmMeasurements = new HashMap<>();
     }
 
-    public Map<String, List<VmMeasurement>> getVmMeasurements() {
-        return vmMeasurements;
-    }
-
-    public Double getInitialWeight() {
-        return initialWeight;
-    }
-
-    public void setInitialWeight(Double initialWeight) {
-        this.initialWeight = initialWeight;
-    }
-
-    public Map<String, List<Double>> getMeasurements() {
-        return measurements;
-    }
-
-    public void setMeasurements(Map<String, List<Double>> measurements) {
-        this.measurements = measurements;
-    }
-
     public List<String> getParentMethodNames() {
+        List<String> parentMethodNames = new ArrayList<>();
+        if(parent != null) {
+            parentMethodNames = parent.getParentMethodNames();
+
+        } else {
+            parentMethodNames.add(this.payload.getMethodName());
+        }
         return parentMethodNames;
-    }
-
-    public StackTraceTreeNode getParent() {
-        return parent;
-    }
-
-    public void setParent(StackTraceTreeNode parent) {
-        this.parent = parent;
-    }
-
-    public void setChildren(List<StackTraceTreeNode> children) {
-        this.children = children;
-    }
-
-    public void setPayload(StackTraceTreePayload payload) {
-        this.payload = payload;
-    }
-
-    public void setVmMeasurements(Map<String, List<VmMeasurement>> vmMeasurements) {
-        this.vmMeasurements = vmMeasurements;
     }
 
     @Override
@@ -147,8 +110,8 @@ public class StackTraceTreeNode {
                     return false;
                 }
 
-                List<String> o1 = other.parentMethodNames;
-                List<String> o2 = this.parentMethodNames;
+                List<String> o1 = other.getParentMethodNames();
+                List<String> o2 = this.getParentMethodNames();
                 return o1.equals(o2);
             }
         }
