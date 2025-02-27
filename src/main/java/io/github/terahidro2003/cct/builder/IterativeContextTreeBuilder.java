@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -26,6 +27,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         // Gather only JFR files containing a commit hash in the filename
         jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit) && jfr.getName().endsWith(".jfr"))
                 .collect(Collectors.toCollection(ArrayList::new));
+        jfrs = jfrs.subList(0, 5000);
         log.info("Filtered JFRs for tree generation: {}", jfrs);
 
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
@@ -34,7 +36,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
 
         if(parallelProcessing) {
             int hardwareCoreCount = Runtime.getRuntime().availableProcessors();
-            runParallelVm(jfrs, testcase, vmTrees, maxThreads > 0 ? maxThreads : hardwareCoreCount, filterJvmNativeNodes);
+            runParallelVm(jfrs, testcase, vmTrees, mergedTree, commit, maxThreads > 0 ? maxThreads : hardwareCoreCount, filterJvmNativeNodes);
         } else {
             for (int i = 0; i<jfrs.size(); i++) {
                 log.info("Building local tree for index: {} from JFR file: {}", i, jfrs.get(i).getName());
@@ -67,7 +69,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         return Integer.parseInt(matcher.group(1));
     }
 
-    private void runParallelVm(List<File> jfrs, String testcase, List<StackTraceTreeNode> vmTrees, int maxThreads, boolean filterJvmNativeNodes) {
+    private void runParallelVm(List<File> jfrs, String testcase, List<StackTraceTreeNode> vmTrees, StackTraceTreeNode mergedTree, String commit, int maxThreads, boolean filterJvmNativeNodes) {
         ExecutorService executorService = Executors.newFixedThreadPool(maxThreads);
         List<Future<StackTraceTreeNode>> futures = new ArrayList<>();
 
@@ -84,12 +86,22 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
             }));
         }
 
+        final Object mergedTreeLock = new Object();
+
         for (Future<StackTraceTreeNode> future : futures) {
             try {
                 StackTraceTreeNode vmTree = future.get();
                 if (vmTree != null) {
                     synchronized (vmTrees) {
-                        vmTrees.add(vmTree);
+                        Map<List<String>, List<VmMeasurement>> measurementsMap
+                                = createMeasurementsMap(List.of(vmTree), testcase, false);
+                        synchronized (mergedTreeLock) {
+                            vmTrees.add(mergedTree);
+                            vmTrees.add(vmTree);
+                            mergedTree = TreeUtils.mergeTrees(vmTrees);
+                            vmTrees.clear();
+                            addLocalMeasurements(mergedTree, measurementsMap, commit, false);
+                        }
                     }
                 }
             } catch (InterruptedException | ExecutionException e) {
