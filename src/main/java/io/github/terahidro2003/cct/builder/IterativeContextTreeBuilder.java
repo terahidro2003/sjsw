@@ -39,6 +39,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
             StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
             mergedTree = processPartialTree(parallelProcessing, measurementsMap, vmTree, mergedTree, commit, testcase, vmTrees);
         }
+        addLocalMeasurements(mergedTree, measurementsMap, commit, false);
 
         String folderPath = jfrs.get(0).getParentFile().getAbsolutePath();
         File output =
