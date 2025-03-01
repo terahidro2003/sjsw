@@ -26,7 +26,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         // Gather only JFR files containing a commit hash in the filename
         jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit) && jfr.getName().endsWith(".jfr"))
                 .collect(Collectors.toCollection(ArrayList::new));
-        jfrs = jfrs.subList(0, 5000);
+//        jfrs = jfrs.subList(0, 2000);
         log.info("Filtered JFRs for tree generation: {}", jfrs);
 
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
@@ -57,7 +57,11 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
             }
         }
 
-
+        String folderPath = jfrs.get(0).getParentFile().getAbsolutePath();
+        File output =
+                new File(folderPath + File.separator + testcase + "-" + commit + "-" + UUID.randomUUID() + ".json");
+        log.info("Writing merged tree to a file at location {}", output.getAbsolutePath());
+        TreeUtils.writeCCTtoFile(mergedTree, output);
         return mergedTree;
     }
 
@@ -68,49 +72,52 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         return Integer.parseInt(matcher.group(1));
     }
 
-    private void runParallelVm(List<File> jfrs, String testcase, List<StackTraceTreeNode> vmTrees, StackTraceTreeNode mergedTree, String commit, int maxThreads, boolean filterJvmNativeNodes) {
+    private void runParallelVm(List<File> jfrs, String testcase, List<StackTraceTreeNode> vmTrees,
+                               StackTraceTreeNode mergedTree, String commit, int maxThreads, boolean filterJvmNativeNodes) {
         ExecutorService executorService = Executors.newFixedThreadPool(maxThreads);
-        List<Future<StackTraceTreeNode>> futures = new ArrayList<>();
 
-        for (File jfr : jfrs) {
-            futures.add(executorService.submit(() -> {
-                SamplerResultsProcessor processor = new SamplerResultsProcessor();
-                log.info("Building local tree for JFR file: {}", jfr.getName());
-
-                // filters out common JVM and native method call nodes from all retrieved subtrees
-                if(filterJvmNativeNodes) {
-                    return TreeUtils.filterJvmNodes(buildVmTree(jfr, processor, testcase));
-                }
-                return buildVmTree(jfr, processor, testcase);
-            }));
-        }
-
-        final Object mergedTreeLock = new Object();
-
-        for (Future<StackTraceTreeNode> future : futures) {
-            try {
-                StackTraceTreeNode vmTree = future.get();
-                if (vmTree != null) {
-                    synchronized (vmTrees) {
-                        Map<List<String>, List<VmMeasurement>> measurementsMap
-                                = createMeasurementsMap(List.of(vmTree), testcase, false);
-                        synchronized (mergedTreeLock) {
-                            vmTrees.add(mergedTree);
-                            vmTrees.add(vmTree);
-                            mergedTree = TreeUtils.mergeTrees(vmTrees);
-                            vmTrees.clear();
-                            addLocalMeasurements(mergedTree, measurementsMap, commit, false);
-                        }
-                    }
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                log.error("Error processing JFR file", e);
-                Thread.currentThread().interrupt();
+        try {
+            List<Callable<StackTraceTreeNode>> tasks = new ArrayList<>();
+            for (File jfr : jfrs) {
+                tasks.add(() -> {
+                    SamplerResultsProcessor processor = new SamplerResultsProcessor();
+                    log.info("Building local tree for JFR file: {}", jfr.getName());
+                    StackTraceTreeNode tree = buildVmTree(jfr, processor, testcase);
+                    return filterJvmNativeNodes ? TreeUtils.filterJvmNodes(tree) : tree;
+                });
             }
-        }
 
-        executorService.shutdown();
+            List<Future<StackTraceTreeNode>> futures = executorService.invokeAll(tasks);
+            List<StackTraceTreeNode> collectedTrees = new ArrayList<>();
+
+            for (Future<StackTraceTreeNode> future : futures) {
+                try {
+                    StackTraceTreeNode vmTree = future.get();
+                    if (vmTree != null) {
+                        collectedTrees.add(vmTree);
+                    }
+                } catch (InterruptedException | ExecutionException e) {
+                    log.error("Error processing JFR file", e);
+                    Thread.currentThread().interrupt();
+                }
+            }
+
+            if (!collectedTrees.isEmpty()) {
+                Map<List<String>, List<VmMeasurement>> measurementsMap = createMeasurementsMap(collectedTrees, testcase, false);
+                synchronized (mergedTree) {
+                    mergedTree = TreeUtils.mergeTrees(collectedTrees);
+                    addLocalMeasurements(mergedTree, measurementsMap, commit, false);
+                    vmTrees.addAll(collectedTrees);
+                }
+            }
+        } catch (InterruptedException e) {
+            log.error("Task execution interrupted", e);
+            Thread.currentThread().interrupt();
+        } finally {
+            executorService.shutdown();
+        }
     }
+
 
     public synchronized StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
         StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr));

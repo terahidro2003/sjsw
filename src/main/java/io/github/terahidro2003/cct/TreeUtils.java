@@ -1,9 +1,16 @@
 package io.github.terahidro2003.cct;
 
+import com.fasterxml.jackson.core.exc.StreamWriteException;
+import com.fasterxml.jackson.databind.DatabindException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.terahidro2003.cct.result.StackTraceTreeNode;
+import io.github.terahidro2003.config.Constants;
+import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -238,6 +245,19 @@ public class TreeUtils {
                     stack.push(child);
                 }
             }
+        }
+    }
+
+    public static void writeCCTtoFile(@NonNull StackTraceTreeNode tree, @NonNull File file) {
+        ObjectMapper om = Constants.OBJECT_MAPPER;
+        try {
+            om.writeValue(file, tree);
+        } catch (StreamWriteException e) {
+            throw new RuntimeException(e);
+        } catch (DatabindException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
