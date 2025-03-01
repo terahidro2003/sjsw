@@ -51,7 +51,7 @@ public class StackTraceTreeNode implements Serializable {
     private void printTreeRecursive(StackTraceTreeNode node, String prefix, boolean isLast) {
         var measurementsList = node.getMeasurements();
         final StringBuilder measurementsAsString = new StringBuilder();
-        vmMeasurements.forEach((k,v) -> {
+        node.vmMeasurements.forEach((k,v) -> {
             v.forEach(value -> {
                 StringBuilder second = new StringBuilder();
                 value.getMeasurements().forEach(e -> {
@@ -84,14 +84,17 @@ public class StackTraceTreeNode implements Serializable {
         if (!vmMeasurements.containsKey(identifier)) {
             vmMeasurements.put(identifier, new ArrayList<>());
         }
-        var currentWeights = vmMeasurements.get(identifier)
-                .stream().filter(w -> w.vm == weights.vm)
-                .collect(Collectors.toCollection(ArrayList::new));
-        if(currentWeights.size() == 1 && weights.getMeasurements().get(0) != null) {
-            currentWeights.get(0).addMeasurement(weights.getMeasurements().get(0));
-        } else if (currentWeights.isEmpty()) {
-            vmMeasurements.get(identifier).add(weights);
-        }
+
+        vmMeasurements.get(identifier).add(weights);
+
+//        var currentWeights = vmMeasurements.get(identifier)
+//                .stream().filter(w -> w.vm == weights.vm)
+//                .collect(Collectors.toCollection(ArrayList::new));
+//        if(currentWeights.size() == 1 && weights.getMeasurements().get(0) != null) {
+//            currentWeights.get(0).addMeasurement(weights.getMeasurements().get(0));
+//        } else if (currentWeights.isEmpty()) {
+//            vmMeasurements.get(identifier).add(weights);
+//        }
     }
 
     public void resetVmMeasurements() {

@@ -24,13 +24,6 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
             throw new RuntimeException("JFR files cannot be empty");
         }
 
-//        File dir = jfrs.get(0).getParentFile();
-//        File json = Arrays.stream(dir.listFiles()).filter(file -> file.getName().contains(commit) && file.getName().contains(testcase) && file.getName().contains(".json")).findFirst().orElse(null);
-//        if(json != null) {
-//            var tree = Constants.OBJECT_MAPPER.readValue(json, StackTraceTreeNode.class);
-//            return tree;
-//        }
-
         // Gather only JFR files containing a commit hash in the filename
         jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit) && jfr.getName().endsWith(".jfr"))
                 .collect(Collectors.toCollection(ArrayList::new));
@@ -51,7 +44,6 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         File output =
                 new File(folderPath + File.separator + testcase + "-" + commit + "-" + UUID.randomUUID() + ".json");
         log.info("Writing merged tree to a file at location {}", output.getAbsolutePath());
-//        TreeUtils.writeCCTtoFile(mergedTree, output);
         return mergedTree;
     }
 
@@ -74,7 +66,6 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         vmTrees.add(vmTree);
         mergedTree = TreeUtils.mergeTrees(vmTrees);
         vmTrees.clear();
-        addLocalMeasurements(mergedTree, measurementsMap, commit, false);
         return mergedTree;
     }
 
@@ -137,8 +128,14 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
                     currentNode.setMeasurements(new HashMap<>());
                 }
 
-                measurementsMap.get(parentSignatures)
-                        .add(new VmMeasurement(new ArrayList<Double>(List.of(currentNode.getInitialWeight())), localTree.getPayload().getVm()));
+                VmMeasurement vmMeasurement = measurementsMap.get(parentSignatures).stream()
+                        .filter(vmm -> vmm.getVm() == localTree.getPayload().getVm()).findFirst().orElse(null);
+                if(vmMeasurement != null) {
+                    vmMeasurement.addMeasurement(currentNode.getInitialWeight());
+                } else {
+                    measurementsMap.get(parentSignatures)
+                            .add(new VmMeasurement(new ArrayList<Double>(List.of(currentNode.getInitialWeight())), localTree.getPayload().getVm()));
+                }
 
                 for (StackTraceTreeNode child : currentNode.getChildren()) {
                     if (child != null) {
