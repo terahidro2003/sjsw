@@ -1,5 +1,6 @@
 package io.github.terahidro2003.cct.result;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import java.io.Serializable;
@@ -7,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Getter
 @Builder
@@ -17,6 +17,7 @@ public class StackTraceTreeNode implements Serializable {
     @Getter
     private final List<String> parentMethodNames = new ArrayList<>();
 
+    @JsonIgnore
     private StackTraceTreeNode parent;
     @Getter
     @Setter

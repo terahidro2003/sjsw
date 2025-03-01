@@ -45,6 +45,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         File output =
                 new File(folderPath + File.separator + testcase + "-" + commit + "-" + UUID.randomUUID() + ".json");
         log.info("Writing merged tree to a file at location {}", output.getAbsolutePath());
+        TreeUtils.writeCCTtoFile(mergedTree, output);
         return mergedTree;
     }
 
