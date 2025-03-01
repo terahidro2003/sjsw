@@ -1,7 +1,6 @@
 package io.github.terahidro2003.cct.result;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -10,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class StackTraceTreeNode implements Serializable {
     @Getter
     private final List<String> parentMethodNames = new ArrayList<>();

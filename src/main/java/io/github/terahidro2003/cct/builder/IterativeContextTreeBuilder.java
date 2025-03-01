@@ -4,11 +4,12 @@ import io.github.terahidro2003.cct.SamplerResultsProcessor;
 import io.github.terahidro2003.cct.TreeUtils;
 import io.github.terahidro2003.cct.result.StackTraceTreeNode;
 import io.github.terahidro2003.cct.result.VmMeasurement;
+import io.github.terahidro2003.config.Constants;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -17,51 +18,40 @@ import java.util.stream.Collectors;
 public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
 
     public StackTraceTreeNode buildTree(List<File> jfrs, String commit, String testcase, boolean filterJvmNativeNodes,
-                                        boolean parallelProcessing, int maxThreads) {
+                                        boolean parallelProcessing, int maxThreads) throws IOException {
         log.info("Building tree for testcase method: {}", testcase);
         if (jfrs.isEmpty()) {
             throw new RuntimeException("JFR files cannot be empty");
         }
 
+//        File dir = jfrs.get(0).getParentFile();
+//        File json = Arrays.stream(dir.listFiles()).filter(file -> file.getName().contains(commit) && file.getName().contains(testcase) && file.getName().contains(".json")).findFirst().orElse(null);
+//        if(json != null) {
+//            var tree = Constants.OBJECT_MAPPER.readValue(json, StackTraceTreeNode.class);
+//            return tree;
+//        }
+
         // Gather only JFR files containing a commit hash in the filename
         jfrs = jfrs.stream().filter(jfr -> jfr.getName().contains(commit) && jfr.getName().endsWith(".jfr"))
                 .collect(Collectors.toCollection(ArrayList::new));
-//        jfrs = jfrs.subList(0, 2000);
         log.info("Filtered JFRs for tree generation: {}", jfrs);
 
         SamplerResultsProcessor processor = new SamplerResultsProcessor();
         final List<StackTraceTreeNode> vmTrees = new ArrayList<>();
         StackTraceTreeNode mergedTree = null;
 
-        if(parallelProcessing) {
-            int hardwareCoreCount = Runtime.getRuntime().availableProcessors();
-            runParallelVm(jfrs, testcase, vmTrees, mergedTree, commit, maxThreads > 0 ? maxThreads : hardwareCoreCount, filterJvmNativeNodes);
-        } else {
-            for (int i = 0; i<jfrs.size(); i++) {
-                log.info("Building local tree for index: {} from JFR file: {}", i, jfrs.get(i).getName());
-                StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
-
-                // filters out common JVM and native method call nodes from all retrieved subtrees
-                if(filterJvmNativeNodes) {
-                    vmTree = TreeUtils.filterJvmNodes(vmTree);
-                }
-
-                Map<List<String>, List<VmMeasurement>> measurementsMap
-                        = createMeasurementsMap(List.of(vmTree), testcase, false);
-
-                vmTrees.add(mergedTree);
-                vmTrees.add(vmTree);
-                mergedTree = TreeUtils.mergeTrees(vmTrees);
-                vmTrees.clear();
-                addLocalMeasurements(mergedTree, measurementsMap, commit, false);
-            }
+        final Map<List<String>, List<VmMeasurement>> measurementsMap = new HashMap<>();
+        for (int i = 0; i<jfrs.size(); i++) {
+            log.info("Building local tree for index: {} from JFR file: {}", i, jfrs.get(i).getName());
+            StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
+            mergedTree = processPartialTree(parallelProcessing, measurementsMap, vmTree, mergedTree, commit, testcase, vmTrees);
         }
 
         String folderPath = jfrs.get(0).getParentFile().getAbsolutePath();
         File output =
                 new File(folderPath + File.separator + testcase + "-" + commit + "-" + UUID.randomUUID() + ".json");
         log.info("Writing merged tree to a file at location {}", output.getAbsolutePath());
-        TreeUtils.writeCCTtoFile(mergedTree, output);
+//        TreeUtils.writeCCTtoFile(mergedTree, output);
         return mergedTree;
     }
 
@@ -72,50 +62,20 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         return Integer.parseInt(matcher.group(1));
     }
 
-    private void runParallelVm(List<File> jfrs, String testcase, List<StackTraceTreeNode> vmTrees,
-                               StackTraceTreeNode mergedTree, String commit, int maxThreads, boolean filterJvmNativeNodes) {
-        ExecutorService executorService = Executors.newFixedThreadPool(maxThreads);
-
-        try {
-            List<Callable<StackTraceTreeNode>> tasks = new ArrayList<>();
-            for (File jfr : jfrs) {
-                tasks.add(() -> {
-                    SamplerResultsProcessor processor = new SamplerResultsProcessor();
-                    log.info("Building local tree for JFR file: {}", jfr.getName());
-                    StackTraceTreeNode tree = buildVmTree(jfr, processor, testcase);
-                    return filterJvmNativeNodes ? TreeUtils.filterJvmNodes(tree) : tree;
-                });
-            }
-
-            List<Future<StackTraceTreeNode>> futures = executorService.invokeAll(tasks);
-            List<StackTraceTreeNode> collectedTrees = new ArrayList<>();
-
-            for (Future<StackTraceTreeNode> future : futures) {
-                try {
-                    StackTraceTreeNode vmTree = future.get();
-                    if (vmTree != null) {
-                        collectedTrees.add(vmTree);
-                    }
-                } catch (InterruptedException | ExecutionException e) {
-                    log.error("Error processing JFR file", e);
-                    Thread.currentThread().interrupt();
-                }
-            }
-
-            if (!collectedTrees.isEmpty()) {
-                Map<List<String>, List<VmMeasurement>> measurementsMap = createMeasurementsMap(collectedTrees, testcase, false);
-                synchronized (mergedTree) {
-                    mergedTree = TreeUtils.mergeTrees(collectedTrees);
-                    addLocalMeasurements(mergedTree, measurementsMap, commit, false);
-                    vmTrees.addAll(collectedTrees);
-                }
-            }
-        } catch (InterruptedException e) {
-            log.error("Task execution interrupted", e);
-            Thread.currentThread().interrupt();
-        } finally {
-            executorService.shutdown();
+    public StackTraceTreeNode processPartialTree(boolean filterJvmNativeNodes, Map<List<String>, List<VmMeasurement>> measurementsMap, StackTraceTreeNode vmTree, StackTraceTreeNode mergedTree, String commit, String testcase, final List<StackTraceTreeNode> vmTrees) {
+        // filters out common JVM and native method call nodes from all retrieved subtrees
+        if(filterJvmNativeNodes) {
+            vmTree = TreeUtils.filterJvmNodes(vmTree);
         }
+
+        createMeasurementsMap(measurementsMap, List.of(vmTree), testcase, false);
+
+        vmTrees.add(mergedTree);
+        vmTrees.add(vmTree);
+        mergedTree = TreeUtils.mergeTrees(vmTrees);
+        vmTrees.clear();
+        addLocalMeasurements(mergedTree, measurementsMap, commit, false);
+        return mergedTree;
     }
 
 
@@ -150,9 +110,8 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         }
     }
 
-    public Map<List<String>, List<VmMeasurement>> createMeasurementsMap(List<StackTraceTreeNode> localTrees,
+    public void createMeasurementsMap(Map<List<String>, List<VmMeasurement>> measurementsMap, List<StackTraceTreeNode> localTrees,
                                                                         String testcaseSignature, boolean flag) {
-        Map<List<String>, List<VmMeasurement>> measurementsMap = new HashMap<>();
         for (StackTraceTreeNode localTree : localTrees) {
 
             Stack<StackTraceTreeNode> stack = new Stack<>();
@@ -188,7 +147,5 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
                 }
             }
         }
-
-        return measurementsMap;
     }
 }

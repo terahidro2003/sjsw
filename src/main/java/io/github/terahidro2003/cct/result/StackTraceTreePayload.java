@@ -1,18 +1,22 @@
 package io.github.terahidro2003.cct.result;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
 
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class StackTraceTreePayload implements Serializable {
     private String methodName;
     private int vm;
 
     public StackTraceTreePayload(String methodName) {
         this.methodName = methodName;
-    }
-
-    public StackTraceTreePayload(String methodName, int vm) {
-        this.methodName = methodName;
-        this.vm = vm;
     }
 
     public String getMethodName() {
