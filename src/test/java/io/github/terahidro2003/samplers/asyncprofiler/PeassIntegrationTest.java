@@ -1,11 +1,18 @@
 package io.github.terahidro2003.samplers.asyncprofiler;
 
+import io.github.terahidro2003.cct.SamplerResultsProcessor;
+import io.github.terahidro2003.cct.result.StackTraceTreeNode;
 import io.github.terahidro2003.config.Config;
-import io.github.terahidro2003.result.SamplerResultsProcessor;
-import io.github.terahidro2003.result.tree.StackTraceTreeNode;
-import io.github.terahidro2003.samplers.SamplerExecutorPipeline;
+import io.github.terahidro2003.measurement.data.MeasurementIdentifier;
+import io.github.terahidro2003.measurement.data.MeasurementInformation;
+import io.github.terahidro2003.measurement.executor.SjswJavaAgentCreator;
+import io.github.terahidro2003.measurement.executor.SjswMeasurementExecutor;
+import io.github.terahidro2003.measurement.executor.asprof.AsprofJavaAgentCreator;
+import io.github.terahidro2003.measurement.executor.asprof.AsprofMeasurementExecutor;
 import io.github.terahidro2003.utils.CommandStarter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -14,6 +21,7 @@ import java.util.List;
 
 import static io.github.terahidro2003.samplers.asyncprofiler.TestConstants.*;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class PeassIntegrationTest {
 
     @Test
@@ -99,8 +107,8 @@ public class PeassIntegrationTest {
 
     private void emulateRunOnce(Config config, int vm, String commit) {
         Duration duration = Duration.ofSeconds(30);
-        SamplerExecutorPipeline pipeline = new AsyncProfilerExecutor();
+        SjswJavaAgentCreator pipeline = new AsprofJavaAgentCreator();
         MeasurementInformation agent = pipeline.javaAgent(config, vm, commit, duration);
-        emulateMavenExecutor(agent.javaAgentPath(), benchmarkProjectDir.getAbsolutePath());
+        emulateMavenExecutor(agent.javaAgent(), benchmarkProjectDir.getAbsolutePath());
     }
 }

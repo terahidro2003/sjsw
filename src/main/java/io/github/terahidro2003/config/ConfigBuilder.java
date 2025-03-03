@@ -1,6 +1,6 @@
 package io.github.terahidro2003.config;
 
-import io.github.terahidro2003.samplers.asyncprofiler.MeasurementIdentifier;
+import io.github.terahidro2003.measurement.data.MeasurementIdentifier;
 import io.github.terahidro2003.utils.FileUtils;
 
 import java.io.File;
