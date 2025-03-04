@@ -50,19 +50,31 @@ public class StackTraceTreeNode implements Serializable {
     }
 
     private void printTreeRecursive(StackTraceTreeNode node, String prefix, boolean isLast) {
-        var measurementsList = node.getMeasurements();
         final StringBuilder measurementsAsString = new StringBuilder();
-        node.vmMeasurements.forEach((k,v) -> {
-            v.forEach(value -> {
+        if(!node.vmMeasurements.isEmpty()) {
+            node.vmMeasurements.forEach((k,v) -> {
+                v.forEach(value -> {
+                    StringBuilder second = new StringBuilder();
+                    value.getMeasurements().forEach(e -> {
+                        second.append(e);
+                        second.append(",");
+                    });
+                    measurementsAsString.append(second.toString());
+                    measurementsAsString.append(";");
+                });
+            });
+        } else {
+            node.measurements.forEach((k,v) -> {
                 StringBuilder second = new StringBuilder();
-                value.getMeasurements().forEach(e -> {
-                    second.append(e);
+                v.forEach(value -> {
+                    second.append(value);
                     second.append(",");
                 });
                 measurementsAsString.append(second.toString());
                 measurementsAsString.append(";");
             });
-        });
+        }
+
 
         System.out.println(prefix + (isLast ? "└────── " : "├────── ") + node.getPayload().getMethodName() +
                 " [Measurements: { " + measurementsAsString.toString() + " }]" +
