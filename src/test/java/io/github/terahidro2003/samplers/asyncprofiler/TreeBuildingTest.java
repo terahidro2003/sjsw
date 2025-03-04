@@ -1,13 +1,10 @@
 package io.github.terahidro2003.samplers.asyncprofiler;
 
-import io.github.terahidro2003.cct.builder.ExecutionSampleTreeBuilder;
 import io.github.terahidro2003.cct.builder.IterativeContextTreeBuilder;
 import io.github.terahidro2003.cct.builder.VmContextTreeBuilder;
-import io.github.terahidro2003.cct.jfr.ExecutionSample;
-import io.github.terahidro2003.cct.jfr.Method;
 import io.github.terahidro2003.cct.result.StackTraceTreeNode;
-import org.apache.commons.lang3.RandomUtils;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -21,7 +18,8 @@ public class TreeBuildingTest {
     final File resourcesDir = new File("src/test/resources");
 
     @Test
-    public void test() {
+    @DisplayName("[VM] 2 VMs")
+    public void testVmSamplingTree() {
         String testcase = "testMe()";
         List<File> jfrs = List.of(
                 new File(resourcesDir + "/1111_1.jfr"),
@@ -35,9 +33,12 @@ public class TreeBuildingTest {
         System.out.println();
         System.out.println();
         mergedTree.printTree();
+
+        assertTree(mergedTree, 2, "1111", false);
     }
 
     @Test
+    @DisplayName("[VM] 5 VMs")
     public void testMoreVms() {
         String testcase = "testMe()";
         List<File> jfrs = new ArrayList<>();
@@ -51,23 +52,12 @@ public class TreeBuildingTest {
         System.out.println();
         System.out.println();
         mergedTree.printTree();
+
+        assertTree(mergedTree, 5, "1111", false);
     }
 
     @Test
-    public void testIterativeTree() throws IOException {
-        String testcase = "testMe()";
-        File folder = new File(resourcesDir + "/iterativeSamples");
-        List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
-
-        IterativeContextTreeBuilder builder = new IterativeContextTreeBuilder();
-        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "55bbfafd67ee1f7dc721ea945714a324708787c6", testcase, false, false, 0);
-
-        System.out.println();
-        System.out.println();
-        mergedTree.printTree();
-    }
-
-    @Test
+    @DisplayName("[VM] 20 VMs")
     public void test20Vms() {
         String testcase = "testMe()";
         List<File> jfrs = new ArrayList<>();
@@ -81,85 +71,46 @@ public class TreeBuildingTest {
         System.out.println();
         System.out.println();
         mergedTree.printTree();
-    }
 
-
-    private List<String> path1a = new ArrayList<>(List.of("org.example.testing", "org.example.methodA", "org.example.methodB"));
-    private List<String> path1b = new ArrayList<>(List.of("org.example.testing", "org.example.methodA", "org.example.someOtherMethod<init>", "org.example.someOtherMethod", "libjvm.so.Runtime1::counter_overflow()"));
-    private List<String> path2 = new ArrayList<>(List.of("org.example.testing", "org.example.methodB"));
-    private Map<String, List<Double>> mockMeasurementsPath = new HashMap<>();
-
-    private void initMeasurements() {
-        mockMeasurementsPath.put("org.example.testing", List.of(520.0, 580.0, 745.0, 587.0, 147.0));
-        mockMeasurementsPath.put("org.example.methodA", List.of(420.0, 580.0, 745.0, 587.0, 147.0));
-        mockMeasurementsPath.put("org.example.methodB", List.of(100.0, 580.0, 745.0, 587.0, 147.0));
-        mockMeasurementsPath.put("org.example.someOtherMethod<init>", List.of(520.0, 580.0, 745.0, 587.0, 147.0));
-        mockMeasurementsPath.put("org.example.someOtherMethod", List.of(520.0, 580.0, 745.0, 587.0, 147.0));
-        mockMeasurementsPath.put("libjvm.so.Runtime1::counter_overflow()", List.of(520.0, 580.0, 745.0, 587.0, 147.0));
+        assertTree(mergedTree, 20, "1111", false);
     }
 
     @Test
-    public void testIterativeTreeIntegrity() {
+    @DisplayName("[Iterative] 2 VMs")
+    public void testIterativeTree() throws IOException {
         String testcase = "testMe()";
-        String commit = "a8f0722f92d9e089d8d856f33313c0c2c2572f10";
-        int iterations = 5;
-        reverseStacktraces();
-//        IterativeContextTreeBuilder builder = new IterativeContextTreeBuilder();
-        prepareFakeTree(List.of(path1a, path1b), commit, 2);
+        File folder = new File(resourcesDir + "/iterativeSamples");
+        List<File> jfrs = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
+
+        IterativeContextTreeBuilder builder = new IterativeContextTreeBuilder();
+        StackTraceTreeNode mergedTree = builder.buildTree(jfrs, "55bbfafd67ee1f7dc721ea945714a324708787c6", testcase, false, false, 0);
+
+        System.out.println();
+        System.out.println();
+        mergedTree.printTree();
+
+        assertTree(mergedTree, 2, "55bbfafd67ee1f7dc721ea945714a324708787c6", true);
+        // assert serialization results
     }
 
-    private void reverseStacktraces() {
-        Collections.reverse(path1a);
-        Collections.reverse(path1b);
-        Collections.reverse(path2);
-    }
+    private void assertTree(StackTraceTreeNode mergedTree, int vms, String commit, boolean iterativeSampling) {
+        Assertions.assertNotNull(mergedTree);
 
-    private StackTraceTreeNode prepareFakeTree(List<List<String>> pathsAsMethodNames, String commit, int vms) {
-        List<ExecutionSample> samples = new ArrayList<>();
-        pathsAsMethodNames.forEach(path -> {
-            samples.add(getMockExecutionSample(path));
-        });
-
-        ExecutionSampleTreeBuilder treeBuilder = new ExecutionSampleTreeBuilder();
-        StackTraceTreeNode tree = treeBuilder.buildFromExecutionSamples(samples);
-        addFakeMeasurements(tree, commit, vms);
-
-        return tree;
-    }
-
-    private void addFakeMeasurements(StackTraceTreeNode root, String commit, int vms) {
-        Stack<StackTraceTreeNode> stack = new Stack<>();
-        stack.push(root);
-
-        while (!stack.isEmpty()) {
-            StackTraceTreeNode currentNode = stack.pop();
-
-            int randomAmountofSamples = RandomUtils.nextInt(1, 1000);
-            for (int i = 0; i < vms; i++) {
-                int amount = randomAmountofSamples * RandomUtils.nextInt(1, 5);
-                currentNode.addMeasurement(commit, (double) amount);
-            }
-
-            for (StackTraceTreeNode child : currentNode.getChildren()) {
-                if (child != null) {
-                    stack.push(child);
-                }
-            }
+        if(!iterativeSampling) {
+            Assertions.assertEquals(vms, mergedTree.getMeasurements().get(commit).size());
+            Assertions.assertTrue(mergedTree.getVmMeasurements().isEmpty());
+        } else {
+            Assertions.assertTrue(mergedTree.getMeasurements().isEmpty());
+            Assertions.assertNotNull(mergedTree.getVmMeasurements().get(commit));
+            Assertions.assertEquals(vms, mergedTree.getVmMeasurements().get(commit).size());
+            Assertions.assertFalse(mergedTree.getVmMeasurements().get(commit).get(0).getMeasurements().isEmpty());
         }
-    }
 
-    private ExecutionSample getMockExecutionSample(List<String> stacktraceAsString) {
-        List<Method> stacktrace = new ArrayList<>();
-        stacktraceAsString.forEach(s -> {
-            Method method = new Method();
-            method.setMethodName(s);
-            method.setMethodModifier("public void");
-            method.setMethodDescriptor("int, long");
-            stacktrace.add(method);
-        });
-        ExecutionSample sample = new ExecutionSample();
-        sample.setStackTrace(stacktrace);
-        return sample;
+        Assertions.assertFalse(mergedTree.getChildren().isEmpty());
+        Assertions.assertNotNull(mergedTree.getChildren().get(0));
+        Assertions.assertFalse(mergedTree.getParentMethodNames().isEmpty());
+        Assertions.assertFalse(mergedTree.getPayload().getMethodName().isEmpty());
+        Assertions.assertTrue(mergedTree.getPayload().getVm() >= 0);
     }
 
     @Test
