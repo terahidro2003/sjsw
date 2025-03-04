@@ -61,7 +61,7 @@ public class AsyncProfilerHelper {
 
         if(config.interval() == null || config.interval() == 0) {
             if(config.timeoutDisabled()) {
-                asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=10ms,cstack=dwarf,event=wall,file=" + output;
+                asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=100ms,cstack=dwarf,event=wall,file=" + output;
             } else {
                 asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",interval=10ms,cstack=dwarf,event=wall,file=" + output;
             }
