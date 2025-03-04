@@ -4,7 +4,6 @@ import io.github.terahidro2003.cct.SamplerResultsProcessor;
 import io.github.terahidro2003.cct.TreeUtils;
 import io.github.terahidro2003.cct.result.StackTraceTreeNode;
 import io.github.terahidro2003.cct.result.VmMeasurement;
-import io.github.terahidro2003.config.Constants;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -37,7 +36,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         for (int i = 0; i<jfrs.size(); i++) {
             log.info("Building local tree for index: {} from JFR file: {}", i, jfrs.get(i).getName());
             StackTraceTreeNode vmTree = buildVmTree(jfrs.get(i), processor, testcase);
-            mergedTree = processPartialTree(parallelProcessing, measurementsMap, vmTree, mergedTree, commit, testcase, vmTrees);
+            mergedTree = processPartialTree(filterJvmNativeNodes, measurementsMap, vmTree, mergedTree, commit, testcase, vmTrees);
         }
         addLocalMeasurements(mergedTree, measurementsMap, commit, false);
 
@@ -56,7 +55,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         return Integer.parseInt(matcher.group(1));
     }
 
-    public StackTraceTreeNode processPartialTree(boolean filterJvmNativeNodes, Map<List<String>, List<VmMeasurement>> measurementsMap, StackTraceTreeNode vmTree, StackTraceTreeNode mergedTree, String commit, String testcase, final List<StackTraceTreeNode> vmTrees) {
+    private StackTraceTreeNode processPartialTree(boolean filterJvmNativeNodes, Map<List<String>, List<VmMeasurement>> measurementsMap, StackTraceTreeNode vmTree, StackTraceTreeNode mergedTree, String commit, String testcase, final List<StackTraceTreeNode> vmTrees) {
         // filters out common JVM and native method call nodes from all retrieved subtrees
         if(filterJvmNativeNodes) {
             vmTree = TreeUtils.filterJvmNodes(vmTree);
@@ -71,8 +70,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         return mergedTree;
     }
 
-
-    public synchronized StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
+    private synchronized StackTraceTreeNode buildVmTree(File jfr, SamplerResultsProcessor processor, String testcase) {
         StackTraceTreeNode bat = processor.getTreeFromJfr(List.of(jfr));
         String filename = jfr.getName();
         int vm = extractVmNumber(filename);
@@ -85,7 +83,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         return mergedTree;
     }
 
-    public synchronized void addLocalMeasurements(StackTraceTreeNode bat, Map<List<String>, List<VmMeasurement>> measurementsMap, String identifier, boolean flag) {
+    private synchronized void addLocalMeasurements(StackTraceTreeNode bat, Map<List<String>, List<VmMeasurement>> measurementsMap, String identifier, boolean flag) {
         if (bat == null || measurementsMap == null) {
             throw new IllegalArgumentException("BAT and measurements map cannot be null");
         }
@@ -103,7 +101,7 @@ public class IterativeContextTreeBuilder extends StackTraceTreeBuilder {
         }
     }
 
-    public void createMeasurementsMap(Map<List<String>, List<VmMeasurement>> measurementsMap, List<StackTraceTreeNode> localTrees,
+    private void createMeasurementsMap(Map<List<String>, List<VmMeasurement>> measurementsMap, List<StackTraceTreeNode> localTrees,
                                                                         String testcaseSignature, boolean flag) {
         for (StackTraceTreeNode localTree : localTrees) {
 
