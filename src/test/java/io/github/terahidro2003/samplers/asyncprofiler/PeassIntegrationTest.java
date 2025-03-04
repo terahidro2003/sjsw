@@ -9,8 +9,6 @@ import io.github.terahidro2003.measurement.executor.SjswJavaAgentCreator;
 import io.github.terahidro2003.measurement.executor.asprof.AsprofJavaAgentCreator;
 import io.github.terahidro2003.utils.CommandStarter;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -19,7 +17,6 @@ import java.util.List;
 
 import static io.github.terahidro2003.samplers.asyncprofiler.TestConstants.*;
 
-@Execution(ExecutionMode.CONCURRENT)
 public class PeassIntegrationTest {
 
     @Test
@@ -78,13 +75,13 @@ public class PeassIntegrationTest {
         }
 
 
-        for (int i = 0; i < commits.length; i++) {
-            log.info("Starting commit {}", commits[i]);
-            File resultsDir = new File(outputPath + "/measurement_" +measurementIdentifier.getUuid().toString());
+        for (String commit : commits) {
+            log.info("Starting commit {}", commit);
+            File resultsDir = new File(outputPath + "/measurement_" + measurementIdentifier.getUuid().toString());
             Path resultsPath = resultsDir.toPath();
 
             // Build BAT
-            List<File> commitJfrs = processor.listJfrMeasurementFiles(resultsPath, List.of(commits[i]));
+            List<File> commitJfrs = processor.listJfrMeasurementFiles(resultsPath, List.of(commit));
             StackTraceTreeNode tree = processor.getTreeFromJfr(commitJfrs);
             StackTraceTreeNode filteredTestcaseTree = processor.filterTestcaseSubtree(testcaseMethod, tree);
 

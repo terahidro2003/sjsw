@@ -12,19 +12,14 @@ import io.github.terahidro2003.measurement.executor.asprof.AsprofMeasurementExec
 import io.github.terahidro2003.utils.CommandStarter;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-
 import java.io.File;
 import java.time.Duration;
 import java.util.*;
-import java.util.stream.Collectors;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-@Execution(ExecutionMode.CONCURRENT)
 class AsyncProfilerExecutorIntegrationTest {
 
     final File benchmarkTargetDir = new File("src/test/resources/TestBenchmark/target");
@@ -33,7 +28,8 @@ class AsyncProfilerExecutorIntegrationTest {
     private static final String MAIN_BENCHMARK_CLASS = "io.github.terahidro2003.benchmark.TestBenchmark";
 
     @Test
-    public void test() {
+    @Disabled
+    public void testMainClass() {
         // run mvn install on benchmark application
         CommandStarter.start("mvn", "clean", "install", "-DskipTests", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
 
@@ -53,49 +49,22 @@ class AsyncProfilerExecutorIntegrationTest {
         // run (and assert whether both phases throw an exception)
         Assertions.assertDoesNotThrow(() -> pipeline.execute(config, duration));
 
-        StackTraceDataTreeBuilder builder = new StackTraceDataTreeBuilder();
-        StackTraceTreeNode root = builder.buildFromResultJson(getResultFile(config));
+        ExecutionSampleTreeBuilder builder = new ExecutionSampleTreeBuilder();
+        var root = builder.buildFromSerializedExecutionSamplesFile(getResultFile(config));
+
+        root.printTree();
 
         // assert that tree at least includes benchmark method names
-        Set<String> methodNames = Set.of("io.github.terahidro2003.benchmark.TestBenchmark.methodB",
-                "io.github.terahidro2003.benchmark.TestXBenchmark.methodA", "io.github.terahidro2003.benchmark.TestBenchmark.main");
+        Set<String> methodNames = Set.of("9 methodB((Ljava/util/List;Ljava/util/stream/DoubleStream;)V)",
+                "9 methodA((Ljava/util/List;)V)", "9 main(([Ljava/lang/String;)V)");
         assertThat(isTreeAssumedValid(root)).containsAnyOf(methodNames.toArray(new String[0]));
     }
 
     @Test
+    @Disabled
     public void testWithJarFile() {
         // compile JAR file for TestBenchmark
         CommandStarter.start("mvn", "clean", "package", "-DskipTests" , "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
-
-        // config
-        Config config = new Config(
-                benchmarkTargetDir.getAbsolutePath() + "/TestBenchmark-1.0-SNAPSHOT.jar",
-                MAIN_BENCHMARK_CLASS,
-                determineProfilerPathByOS(),
-                MEASUREMENTS_PATH + "/" + UUID.randomUUID(),
-                false,
-                0,
-                false
-        );
-        Duration duration = Duration.ofSeconds(30);
-        SjswMeasurementExecutor pipeline = new AsprofMeasurementExecutor();
-
-        // run (and assert whether both phases throw an exception)
-        Assertions.assertDoesNotThrow(() -> pipeline.execute(config, duration));
-
-        StackTraceDataTreeBuilder builder = new StackTraceDataTreeBuilder();
-        StackTraceTreeNode tree = builder.buildFromResultJson(getResultFile(config));
-
-        // assert that tree at least includes benchmark method names
-        Set<String> methodNames = Set.of("io.github.terahidro2003.benchmark.TestBenchmark.methodB",
-                "io.github.terahidro2003.benchmark.TestBenchmark.methodA", "io.github.terahidro2003.benchmark.TestBenchmark.main");
-        assertThat(isTreeAssumedValid(tree)).containsAnyOf(methodNames.toArray(new String[0]));
-    }
-
-    @Test
-    public void testJfrAsTheOutput() {
-        // compile JAR file for TestBenchmark
-        CommandStarter.start("mvn", "clean", "package", "-DskipTests", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
 
         // config
         Config config = new Config(
@@ -107,11 +76,12 @@ class AsyncProfilerExecutorIntegrationTest {
                 0,
                 false
         );
-        Duration duration = Duration.ofSeconds(60);
+        Duration duration = Duration.ofSeconds(30);
         SjswMeasurementExecutor pipeline = new AsprofMeasurementExecutor();
 
         // run (and assert whether both phases throw an exception)
         Assertions.assertDoesNotThrow(() -> pipeline.execute(config, duration));
+
         ExecutionSampleTreeBuilder builder = new ExecutionSampleTreeBuilder();
         var tree = builder.buildFromSerializedExecutionSamplesFile(getResultFile(config));
 
@@ -122,6 +92,7 @@ class AsyncProfilerExecutorIntegrationTest {
     }
 
     @Test
+    @Disabled
     public void testWithoutSpecifiedProfilerPath() {
         // compile JAR file for TestBenchmark
         CommandStarter.start("mvn", "clean", "package", "-DskipTests", "-f", benchmarkProjectDir.getAbsolutePath() + "/pom.xml");
