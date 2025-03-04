@@ -54,24 +54,42 @@ public class AsyncProfilerHelper {
         return "sjsw_asprof_results_" + System.currentTimeMillis() + "_" + vms + "-" + commit;
     }
 
-    public MeasurementInformation retrieveJavaAgent(Duration duration, int vmId, String commit) {
+    public MeasurementInformation retrieveJavaAgent(Duration duration, int vmId, String commit, String... includePattern) {
         File output = retrieveRawOutputFile(vmId, commit);
 
         final String asprofAgent;
-
+        StringBuilder asprofAgentBuilder = new StringBuilder();
+        asprofAgentBuilder.append("-agentpath:");
+        asprofAgentBuilder.append(config.profilerPath());
+        asprofAgentBuilder.append("=start,");
+        asprofAgentBuilder.append("cstack=fp,event=cpu,alluser,");
         if(config.interval() == null || config.interval() == 0) {
-            if(config.timeoutDisabled()) {
-                asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=100ms,cstack=dwarf,event=wall,file=" + output;
-            } else {
-                asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,timeout=" + duration.getSeconds() + ",interval=10ms,cstack=dwarf,event=wall,file=" + output;
+            asprofAgentBuilder.append("interval=100ms,");
+            if(!config.timeoutDisabled()) {
+                asprofAgentBuilder.append("timeout=");
+                asprofAgentBuilder.append(duration.getSeconds());
+                asprofAgentBuilder.append(",");
             }
         } else {
-            if(config.timeoutDisabled()) {
-                asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.interval() + "ms,cstack=dwarf,event=wall,file=" + output;
-            } else {
-                asprofAgent = "-agentpath:"+ config.profilerPath()+"=start,interval=" + config.interval() + "ms,timeout=" + duration.getSeconds() + ",cstack=dwarf,event=wall,file=" + output;
+            asprofAgentBuilder.append("interval=");
+            asprofAgentBuilder.append(config.interval());
+            asprofAgentBuilder.append("ms,");
+            if(!config.timeoutDisabled()) {
+                asprofAgentBuilder.append("timeout=");
+                asprofAgentBuilder.append(duration.getSeconds());
+                asprofAgentBuilder.append(",");
             }
         }
+        if(includePattern != null && includePattern.length > 0) {
+            asprofAgentBuilder.append("include=");
+            asprofAgentBuilder.append(includePattern[0]);
+            asprofAgentBuilder.append(",");
+            asprofAgentBuilder.append("exclude=*jdk.internal.*,");
+        }
+        asprofAgentBuilder.append("file=");
+        asprofAgentBuilder.append(output.getAbsolutePath());
+        asprofAgent = asprofAgentBuilder.toString();
+        System.out.println(asprofAgent);
         return new MeasurementInformation(output.getAbsolutePath(), asprofAgent);
     }
 

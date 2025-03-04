@@ -7,4 +7,6 @@ import java.time.Duration;
 
 public interface SjswJavaAgentCreator {
     MeasurementInformation javaAgent(Config config, int vmId, String commit, Duration samplingDuration);
+
+    MeasurementInformation javaAgent(Config config, int vmId, String commit, Duration samplingDuration, String pattern);
 }

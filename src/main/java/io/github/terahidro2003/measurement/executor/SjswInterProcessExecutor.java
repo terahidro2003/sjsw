@@ -6,7 +6,7 @@ import java.util.List;
 public interface SjswInterProcessExecutor {
     List<File> prepareForIterativeMeasurements(File resultsFolder, int iterations);
 
-    void measure(File resultsFolder, int interval);
+    void measure(File resultsFolder, int interval, String... include);
 
     void stopMeasure();
 }

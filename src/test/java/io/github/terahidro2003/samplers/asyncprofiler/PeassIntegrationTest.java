@@ -6,9 +6,7 @@ import io.github.terahidro2003.config.Config;
 import io.github.terahidro2003.measurement.data.MeasurementIdentifier;
 import io.github.terahidro2003.measurement.data.MeasurementInformation;
 import io.github.terahidro2003.measurement.executor.SjswJavaAgentCreator;
-import io.github.terahidro2003.measurement.executor.SjswMeasurementExecutor;
 import io.github.terahidro2003.measurement.executor.asprof.AsprofJavaAgentCreator;
-import io.github.terahidro2003.measurement.executor.asprof.AsprofMeasurementExecutor;
 import io.github.terahidro2003.utils.CommandStarter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -38,7 +36,7 @@ public class PeassIntegrationTest {
                 .autodownloadProfiler()
                 .jfrEnabled(true)
                 .withTimeoutDisabled()
-                .interval(50)
+                .interval(100)
                 .build();
 
         measure(vms, commits, config, measurementIdentifier, outputPath, testcaseMethod);
@@ -58,7 +56,7 @@ public class PeassIntegrationTest {
                 .autodownloadProfiler()
                 .jfrEnabled(true)
                 .withTimeoutDisabled()
-                .interval(10)
+                .interval(100)
                 .build();
 
         measure(vms, commits, config, measurementIdentifier, outputPath, testcaseMethod);
@@ -73,7 +71,7 @@ public class PeassIntegrationTest {
             log.info("Starting VM {}", i);
             for (int j = 0; j < commits.length; j++) {
                 log.info("Testing commit {}", commits[j]);
-                emulateRunOnce(config, i, commits[j]);
+                emulateRunOnce(config, i, commits[j], "*testing*");
                 log.info("Commit {} measurement completed.", commits[j]);
             }
             log.info("Finished VM {}", i);
@@ -105,10 +103,10 @@ public class PeassIntegrationTest {
         );
     }
 
-    private void emulateRunOnce(Config config, int vm, String commit) {
+    private void emulateRunOnce(Config config, int vm, String commit, String testcaseMethod) {
         Duration duration = Duration.ofSeconds(30);
         SjswJavaAgentCreator pipeline = new AsprofJavaAgentCreator();
-        MeasurementInformation agent = pipeline.javaAgent(config, vm, commit, duration);
+        MeasurementInformation agent = pipeline.javaAgent(config, vm, commit, duration, testcaseMethod);
         emulateMavenExecutor(agent.javaAgent(), benchmarkProjectDir.getAbsolutePath());
     }
 }

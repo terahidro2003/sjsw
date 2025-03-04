@@ -22,4 +22,15 @@ public class AsprofJavaAgentCreator implements SjswJavaAgentCreator {
         }
         return AsyncProfilerHelper.getInstance(config).retrieveJavaAgent(samplingDuration, vmId, commit);
     }
+
+    @Override
+    public MeasurementInformation javaAgent(Config config, int vmId, String commit, Duration samplingDuration, String pattern) {
+        configureResultsFolder(config);
+        try {
+            config = retrieveAsyncProfiler(config);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return AsyncProfilerHelper.getInstance(config).retrieveJavaAgent(samplingDuration, vmId, commit, pattern);
+    }
 }

@@ -39,17 +39,17 @@ public class AsprofInterProcessExecutor implements SjswInterProcessExecutor {
     }
 
     @Override
-    public void measure(File resultFile, int interval) {
+    public void measure(File resultFile, int interval, String... include) {
         if (resultFile == null) {
             throw new NullPointerException("resultFile");
         }
 
-        if (!resultFile.exists()) {
-            throw new IllegalArgumentException("resultFile does not exist");
-        }
-
         try {
-            asyncProfiler.execute("start,jfr,interval=" + interval + ",event=wall,cstack=dwarf,file=" + resultFile.getAbsolutePath());
+            if(include != null && include.length == 1) {
+                asyncProfiler.execute("start,jfr,alluser,include=*"+include[0]+"*,exclude=*jdk.internal.*,interval=" + interval + "ms,timeout=400,event=cpu,cstack=fp,file=" + resultFile.getAbsolutePath());
+            } else {
+                asyncProfiler.execute("start,jfr,alluser,exclude=*jdk.internal.*,interval=" + interval + "ms,event=cpu,cstack=fp,timeout=400,file=" + resultFile.getAbsolutePath());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
