@@ -33,27 +33,7 @@ public class PeassIntegrationTest {
                 .autodownloadProfiler()
                 .jfrEnabled(true)
                 .withTimeoutDisabled()
-                .interval(100)
-                .build();
-
-        measure(vms, commits, config, measurementIdentifier, outputPath, testcaseMethod);
-    }
-
-    @Test
-    void integrateIntensive() {
-        final String[] commits = {"11111"};
-        final int vms = 5;
-        final String testcaseMethod = "testing";
-
-        MeasurementIdentifier measurementIdentifier = new MeasurementIdentifier();
-        String outputPath = benchmarkProjectDir.getAbsolutePath() + "/profiler-results";
-
-        Config config = Config.builder()
-                .outputPathWithIdentifier(outputPath, measurementIdentifier)
-                .autodownloadProfiler()
-                .jfrEnabled(true)
-                .withTimeoutDisabled()
-                .interval(100)
+                .interval(10)
                 .build();
 
         measure(vms, commits, config, measurementIdentifier, outputPath, testcaseMethod);

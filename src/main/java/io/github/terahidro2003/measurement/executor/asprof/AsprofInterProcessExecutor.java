@@ -46,9 +46,9 @@ public class AsprofInterProcessExecutor implements SjswInterProcessExecutor {
 
         try {
             if(include != null && include.length == 1) {
-                asyncProfiler.execute("start,jfr,alluser,include=*"+include[0]+"*,exclude=*jdk.internal.*,interval=" + interval + "ms,timeout=400,event=cpu,cstack=dwarf,file=" + resultFile.getAbsolutePath());
+                asyncProfiler.execute("start,jfr,alluser,include=*"+include[0]+"*,exclude=*jdk.internal.*,event=cpu,interval=" + interval + "ms,cstack=dwarf,file=" + resultFile.getAbsolutePath());
             } else {
-                asyncProfiler.execute("start,jfr,alluser,exclude=*jdk.internal.*,interval=" + interval + "ms,event=cpu,cstack=dwarf,timeout=400,file=" + resultFile.getAbsolutePath());
+                asyncProfiler.execute("start,jfr,alluser,exclude=*jdk.internal.*,event=cpu,interval=" + interval + "ms,cstack=dwarf,file=" + resultFile.getAbsolutePath());
             }
         } catch (Exception e) {
             e.printStackTrace();
